@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenPod Quiz</title>
+    <style>
+        body { 
+            background: #000; 
+            color: #fff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; 
+            margin: 0; 
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container { max-width: 600px; margin: auto; padding: 20px; flex: 1; }
+        img.banner { width: 100%; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); }
+        h1 { color: #00f2ff; text-shadow: 0 0 10px #00f2ff; }
+        .btn { 
+            background: #00f2ff; border: none; color: #000; padding: 15px 40px; 
+            font-weight: bold; cursor: pointer; border-radius: 30px; 
+            margin: 10px; transition: 0.3s; font-size: 16px;
+        }
+        .btn:hover { box-shadow: 0 0 20px #00f2ff; transform: scale(1.05); }
+        .option-btn { 
+            display: block; width: 100%; background: rgba(255,255,255,0.05); 
+            color: #fff; border: 1px solid #333; padding: 15px; 
+            margin: 10px 0; border-radius: 10px; cursor: pointer; 
+            text-align: left; transition: 0.2s; font-size: 15px;
+        }
+        .option-btn:hover { border-color: #00f2ff; background: rgba(0, 242, 255, 0.1); }
+        #timer { font-size: 32px; color: #ff0055; font-weight: bold; margin-bottom: 10px; }
+        .lang-bar { 
+            padding: 20px; 
+            background: #111; 
+            border-top: 1px solid #222;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .lang-bar button { 
+            background: transparent; border: 1px solid #444; color: #aaa; 
+            padding: 5px 10px; border-radius: 5px; cursor: pointer; 
+        }
+        .lang-bar button:hover { border-color: #fff; color: #fff; }
+        #progress { color: #555; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Змінено назву файлу на ту, що на твоєму фото -->
+    <img src="image.png.jpeg" alt="GenPod Header" class="banner">
+    
+    <div id="start-screen">
+        <h1>GenPod Quiz</h1>
+        <p>Are you a freedom maximalist? Test your knowledge.</p>
+        <button class="btn" onclick="startQuiz()">START THE QUIZ</button>
+    </div>
+
+    <div id="quiz-screen" style="display:none;">
+        <div id="progress">Question <span id="q-num">1</span> of 10</div>
+        <div id="timer">15</div>
+        <h2 id="question-text">Question here</h2>
+        <div id="options-container"></div>
+    </div>
+
+    <div id="result-screen" style="display:none;">
+        <h1>Quiz Finished!</h1>
+        <p id="final-score" style="font-size: 40px; color: #00f2ff; font-weight: bold;"></p>
+        <p>Connect your wallet to record this result in GenLayer Testnet.</p>
+        <button class="btn">Connect Wallet</button>
+        <br>
+        <button class="btn" style="background:#1DA1F2; color:#fff;" onclick="window.open('https://twitter.com/intent/tweet?text=I just finished GenPod Quiz!')">Share on X</button>
+    </div>
+</div>
+
+<div class="lang-bar">
+    <button>🇺🇦 UA</button>
+    <button>🇫🇷 FR</button>
+    <button>🇪🇸 ES</button>
+    <button>🇸🇬 SG</button>
+    <button>🌍 AF</button>
+</div>
+
+<script>
+    const questions = [
+        { q: "What is David Johnston’s primary goal when building Web3?", a: ["To maximize profit", "To increase human freedom", "To create government systems", "To restrict open-source"], correct: 1 },
+        { q: "What does David compare AI centralization to?", a: ["Soviet Union economy", "Renaissance", "Industrial revolution", "Utopian abundance"], correct: 0 },
+        { q: "What is the new 'bottleneck' in the age of AI?", a: ["Internet speed", "Coding skills", "Agency describing the work", "Hardware access"], correct: 2 },
+        { q: "How many agents does David aim to run by year-end?", a: ["10 agents", "50 agents", "100 agents", "500 agents"], correct: 2 },
+        { q: "What is 'Johnston’s Law'?", a: ["AI replaces humans", "Centralization is safer", "Everything that can be decentralized will be", "Math is unreliable"], correct: 2 },
+        { q: "Why does AI need Web3 rails like x402?", a: ["Fast, atomic micro-payments", "Bank integration", "KYC verification", "To slow down work"], correct: 0 },
+        { q: "What is the Morpheus Virtual Machine (MVM)?", a: ["Bitcoin miner", "Infrastructure for smart agents", "Antivirus", "Social media algorithm"], correct: 1 },
+        { q: "What was the Google Maps 'dystopia' example?", a: ["No satellite view", "High usage fees", "Ad misdirected to wrong doctor", "Blocked GPS signal"], correct: 2 },
+        { q: "What does 'humans as oracles' mean?", a: ["Humans join code", "Humans express free will and goals", "Manual labor only", "No more decisions"], correct: 1 },
+        { q: "What is an 'intent-based' system?", a: ["Acts without input", "User expresses preference, agent matches it", "Centralized intent database", "Old search engine"], correct: 1 }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let timeLeft = 15;
+    let timerId;
+
+    function startQuiz() {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('quiz-screen').style.display = 'block';
+        showQuestion();
+    }
+
+    function showQuestion() {
+        clearInterval(timerId);
+        timeLeft = 15;
+        document.getElementById('timer').innerText = timeLeft;
+        document.getElementById('q-num').innerText = currentQ + 1;
+        
+        const q = questions[currentQ];
+        document.getElementById('question-text').innerText = q.q;
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        q.a.forEach((opt, i) => {
+            const b = document.createElement('button');
+            b.className = 'option-btn';
+            b.innerText = opt;
+            b.onclick = () => handleAnswer(i === q.correct);
+            container.appendChild(b);
+        });
+
+        timerId = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').innerText = timeLeft;
+            if (timeLeft <= 0) handleAnswer(false);
+        }, 1000);
+    }
+
+    function handleAnswer(isCorrect) {
+        if (isCorrect) score++;
+        currentQ++;
+        if (currentQ < questions.length) {
+            showQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        clearInterval(timerId);
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('final-score').innerText = `${score} / 10`;
+    }
+</script>
+
+</body>
+</html>
