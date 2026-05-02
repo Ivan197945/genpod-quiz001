@@ -10,13 +10,13 @@
         img.banner { width: 100%; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); }
         .btn { background: #00f2ff; border: none; color: #000; padding: 15px 30px; font-weight: bold; cursor: pointer; border-radius: 30px; margin: 10px; transition: 0.3s; width: 90%; font-size: 16px; display: inline-block; }
         .btn:disabled { background: #444; cursor: not-allowed; color: #888; }
-        .option-btn { display: block; width: 100%; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid #333; padding: 15px; margin: 10px 0; border-radius: 10px; cursor: pointer; text-align: left; font-size: 16px; }
+        .option-btn { display: block; width: 100%; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid #333; padding: 15px; margin: 10px 0; border-radius: 10px; cursor: pointer; text-align: left; font-size: 15px; line-height: 1.4; }
         .option-btn:hover { border-color: #00f2ff; background: rgba(0, 242, 255, 0.1); }
         .timer-container { width: 100%; background: #222; height: 8px; border-radius: 4px; margin: 20px 0; overflow: hidden; }
         #timer-bar { background: #00f2ff; height: 100%; width: 100%; transition: width 1s linear; }
         #progress { color: #00f2ff; margin-bottom: 10px; font-weight: bold; font-size: 18px; }
-        .lang-bar { padding: 15px; background: #111; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        .lang-btn { background: transparent; border: 1px solid #444; color: #aaa; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+        .lang-bar { padding: 15px; background: #111; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; border-top: 1px solid #222; }
+        .lang-btn { background: transparent; border: 1px solid #444; color: #aaa; padding: 6px 8px; border-radius: 8px; cursor: pointer; font-size: 12px; }
         .lang-btn.active { border-color: #00f2ff; color: #fff; background: rgba(0, 242, 255, 0.1); }
     </style>
 </head>
@@ -27,28 +27,31 @@
     
     <div id="start-screen">
         <h1 id="txt-title">David Johnston Quiz</h1>
-        <p id="txt-desc">Експертний квіз за матеріалами інтерв'ю</p>
-        <button class="btn" id="wallet-btn" onclick="connectWallet()">Підключити GenLayer Studio</button>
-        <button class="btn" id="start-quiz-btn" disabled onclick="startQuiz()" style="margin-top:20px; background:#ff0055; color:#fff;">ПОЧАТИ</button>
+        <p id="txt-desc">Expert interview quiz</p>
+        <button class="btn" id="wallet-btn" onclick="connectWallet()">Connect GenLayer Studio</button>
+        <button class="btn" id="start-quiz-btn" disabled onclick="startQuiz()" style="margin-top:20px; background:#ff0055; color:#fff;">START</button>
     </div>
 
     <div id="quiz-screen" style="display:none;">
-        <div id="progress">Питання 1 / 10</div>
+        <div id="progress">Question 1 / 10</div>
         <div class="timer-container"><div id="timer-bar"></div></div>
-        <h2 id="question-text" style="font-size: 20px;"></h2>
+        <h2 id="question-text" style="font-size: 18px; margin-bottom: 20px;"></h2>
         <div id="options-container"></div>
     </div>
 
     <div id="result-screen" style="display:none;">
-        <h1 id="txt-finish">Готово!</h1>
+        <h1 id="txt-finish">Finished!</h1>
         <p id="final-score" style="font-size: 48px; color: #00f2ff; font-weight: bold;"></p>
-        <p id="tx-status" style="color: #00ff88;">Надсилання результату в GenLayer Studio...</p>
+        <p id="tx-status" style="color: #00ff88;">Sending result to GenLayer...</p>
     </div>
 </div>
 
 <div class="lang-bar">
     <button class="lang-btn active" id="l-ua" onclick="setLang('UA')">🇺🇦 UA</button>
     <button class="lang-btn" id="l-en" onclick="setLang('EN')">🇺🇸 EN</button>
+    <button class="lang-btn" id="l-tr" onclick="setLang('TR')">🇹🇷 TR</button>
+    <button class="lang-btn" id="l-es" onclick="setLang('ES')">🇪🇸 ES</button>
+    <button class="lang-btn" id="l-fr" onclick="setLang('FR')">🇫🇷 FR</button>
 </div>
 
 <script>
@@ -57,7 +60,7 @@
     let currentQ = 0;
     let score = 0;
     let timer;
-    let timeLeft = 20; // Збільшено час через довжину питань
+    let timeLeft = 25;
 
     const GENLAYER_STUDIO_CONFIG = {
         chainId: '0xF22F', 
@@ -67,71 +70,159 @@
         blockExplorerUrls: [] 
     };
 
+    const translations = {
+        UA: { title: "David Johnston Quiz", desc: "Експертний квіз по інтерв'ю", wallet: "Підключити GenLayer Studio", start: "ПОЧАТИ", finish: "Готово!", tx: "Надсилання в GenLayer..." },
+        EN: { title: "David Johnston Quiz", desc: "Expert interview quiz", wallet: "Connect GenLayer Studio", start: "START", finish: "Finished!", tx: "Sending to GenLayer..." },
+        TR: { title: "David Johnston Quiz", desc: "Uzman mülakat testi", wallet: "GenLayer Studio'yu Bağla", start: "BAŞLAT", finish: "Bitti!", tx: "GenLayer'a gönderiliyor..." },
+        ES: { title: "Quiz David Johnston", desc: "Quiz de entrevista experta", wallet: "Conectar GenLayer Studio", start: "EMPEZAR", finish: "¡Terminado!", tx: "Enviando a GenLayer..." },
+        FR: { title: "Quiz David Johnston", desc: "Quiz interview d'expert", wallet: "Connecter GenLayer Studio", start: "COMMENCER", finish: "Terminé!", tx: "Envoi à GenLayer..." }
+    };
+
     const questions = [
         {
-            EN: "Why does David think there are significantly fewer disputes in the blockchain world than in the traditional world?",
-            UA: "Чому Девід вважає, що у світі блокчейну значно менше суперечок, ніж у традиційному світі?",
-            a: ["Because blockchain lawyers work much faster", "Because smart contracts are deterministic and always execute automatically", "Because all disputes are resolved instantly by AI judges", "Because transactions are too expensive to create conflict"],
-            c: 1
+            UA: "Чому Девід вважає, що у світі блокчейну значно менше суперечок?",
+            EN: "Why does David think there are fewer disputes in the blockchain world?",
+            TR: "David neden blockchain dünyasında daha az anlaşmazlık olduğunu düşünüyor?",
+            ES: "¿Por qué David cree que hay menos disputas en el mundo blockchain?",
+            FR: "Pourquoi David pense-t-il qu'il y a moins de litiges dans le monde blockchain?",
+            a: {
+                UA: ["Адвокати працюють швидше", "Смарт-контракти детерміновані та виконуються автоматично", "Суперечки вирішують ШІ-судді", "Транзакції занадто дорогі для конфліктів"],
+                EN: ["Lawyers work faster", "Smart contracts are deterministic and execute automatically", "Disputes resolved by AI judges", "Transactions are too expensive"],
+                TR: ["Avukatlar daha hızlı", "Akıllı sözleşmeler otomatiktir", "Yapay zeka yargıçları çözer", "İşlemler çok pahalı"],
+                ES: ["Abogados rápidos", "Contratos deterministas", "Jueces de IA", "Transacciones caras"],
+                FR: ["Avocats rapides", "Contrats déterministes", "Juges IA", "Transactions chères"]
+            }, c: 1
         },
         {
-            EN: "What does David mean by the “tragedy of the commons” in the context of AI?",
-            UA: "Що Девід має на увазі під «трагедією спільного» в контексті ШІ?",
-            a: ["The lack of uniform coding standards", "The problem of a few large companies monopolizing the internet", "Resources are overloaded because they are not owned by anyone; decentralization solves this via personal ownership", "Inflated fees in traditional financial systems"],
-            c: 2
+            UA: "Що таке «трагедія спільного» в контексті ШІ за Девідом?",
+            EN: "What is the “tragedy of the commons” in AI according to David?",
+            TR: "David'e göre yapay zekada “ortak malların trajedisi” nedir?",
+            ES: "¿Qué es la “tragedia de los comunes” en IA según David?",
+            FR: "Qu'est-ce que la « tragédie des communs » dans l'IA selon David?",
+            a: {
+                UA: ["Відсутність стандартів коду", "Монополія великих компаній", "Ресурси перевантажені, бо нікому не належать; децентралізація дає особисту власність", "Високі комісії"],
+                EN: ["Lack of code standards", "Big tech monopoly", "Resources overloaded because no one owns them; decentralization fixes this", "High fees"],
+                TR: ["Kod standartları eksikliği", "Tekelcilik", "Kaynaklar sahipsiz olduğu için aşırı yüklü; merkeziyetsizlik çözer", "Yüksek ücretler"],
+                ES: ["Falta de estándares", "Monopolio tecnológico", "Recursos sobrecargados; la descentralización lo soluciona", "Comisiones altas"],
+                FR: ["Manque de standards", "Monopole technologique", "Ressources surchargées ; la décentralisation règle ça", "Frais élevés"]
+            }, c: 2
         },
         {
+            UA: "Як влаштовано управління в системі Morpheus?",
             EN: "How is governance arranged in the Morpheus system?",
-            UA: "Як влаштовано управління (governance) в системі Morpheus?",
-            a: ["All decisions are made by voting within the Morpheus DAO", "Governance is centralized through the Morpheus Company", "Governance is handled by an AI ethics committee", "There is no company or DAO; there is “atomic governance” where each user chooses components"],
-            c: 3
+            TR: "Morpheus sisteminde yönetişim nasıl düzenlenir?",
+            ES: "¿Cómo se organiza la gobernanza en Morpheus?",
+            FR: "Comment la gouvernance est-elle organisée dans Morpheus?",
+            a: {
+                UA: ["Голосування в DAO", "Централізовано компанією", "Комітет з етики ШІ", "Атомне управління: кожен користувач обирає компоненти індивідуально"],
+                EN: ["DAO voting", "Centralized by company", "AI ethics committee", "Atomic governance: users choose components individually"],
+                TR: ["DAO oylaması", "Şirket tarafından merkezi", "Yapay zeka etik komitesi", "Atomik yönetişim: kullanıcılar bileşenleri seçer"],
+                ES: ["Votación DAO", "Centralizada", "Comité de ética", "Gobernanza atómica: el usuario elige"],
+                FR: ["Vote DAO", "Centralisée", "Comité d'éthique", "Gouvernance atomique : l'utilisateur choisit"]
+            }, c: 3
         },
         {
-            EN: "What three key registries does the ERC-8004 standard provide for AI agents?",
-            UA: "Які три ключові реєстри передбачає стандарт ERC-8004 для ШІ-агентів?",
-            a: ["Demand, supply, and liquidity", "Identification, validation, and reputation", "Tokens, wallets, and smart contracts", "Privacy, security, and scalability"],
-            c: 1
+            UA: "Які три реєстри передбачає стандарт ERC-8004?",
+            EN: "What three registries does ERC-8004 provide?",
+            TR: "ERC-8004 hangi üç kaydı sağlar?",
+            ES: "¿Qué tres registros proporciona ERC-8004?",
+            FR: "Quels sont les trois registres d'ERC-8004 ?",
+            a: {
+                UA: ["Попит, пропозиція, ліквідність", "Ідентифікація, валідація, репутація", "Токени, гаманці, контракти", "Приватність, безпека, масштабованість"],
+                EN: ["Demand, supply, liquidity", "Identification, validation, reputation", "Tokens, wallets, contracts", "Privacy, security, scalability"],
+                TR: ["Talep, arz, likidite", "Kimlik, doğrulama, itibar", "Token, cüzdan, sözleşme", "Gizlilik, güvenlik, ölçeklenebilirlik"],
+                ES: ["Demanda, oferta", "Identidad, validación, reputación", "Tokens, billeteras", "Privacidad, seguridad"],
+                FR: ["Demande, offre", "Identité, validation, réputation", "Tokens, portefeuilles", "Vie privée, sécurité"]
+            }, c: 1
         },
         {
-            EN: "What is the decisive factor for resolving agent conflicts according to the ERC-8004 standard?",
-            UA: "Який вирішальний фактор для вирішення конфліктів агентів згідно зі стандартом ERC-8004?",
-            a: ["The number of subscribers of the developer", "The amount of code written for the agent", "Reputation based on real on-chain activity and transactions", "The country of registration of the agent owner"],
-            c: 2
+            UA: "Вирішальний фактор конфліктів за ERC-8004?",
+            EN: "Decisive factor for agent conflicts in ERC-8004?",
+            TR: "ERC-8004'te ajan çatışmaları için belirleyici faktör nedir?",
+            ES: "¿Factor decisivo en conflictos según ERC-8004?",
+            FR: "Facteur décisif pour les conflits d'agents dans ERC-8004 ?",
+            a: {
+                UA: ["Кількість підписників", "Обсяг коду", "Репутація на основі он-чейн активності", "Країна реєстрації"],
+                EN: ["Subscribers count", "Amount of code", "Reputation based on on-chain activity", "Country of registration"],
+                TR: ["Takipçi sayısı", "Kod miktarı", "Zincir içi aktiviteye dayalı itibar", "Kayıtlı olduğu ülke"],
+                ES: ["Suscriptores", "Cantidad de código", "Reputación on-chain", "País de registro"],
+                FR: ["Abonnés", "Quantité de code", "Réputation on-chain", "Pays d'enregistrement"]
+            }, c: 2
         },
         {
-            EN: "How many major languages should agents support for mass adoption in the world?",
-            UA: "Скільки основних мов мають підтримувати агенти для масового впровадження у світі?",
-            a: ["Only English", "Only G7 countries languages", "At least 5 major world languages to ensure accessibility", "All 7000+ languages simultaneously"],
-            c: 2
+            UA: "Скільки мов мають підтримувати агенти для масовості?",
+            EN: "How many languages should agents support for mass adoption?",
+            TR: "Kitlesel benimseme için ajanlar kaç dili desteklemelidir?",
+            ES: "¿Cuántos idiomas deben soportar los agentes?",
+            FR: "Combien de langues les agents doivent-ils supporter ?",
+            a: {
+                UA: ["Тільки англійська", "Тільки мови G7", "Мінімум 5 основних мов", "Усі 7000+ мов світу"],
+                EN: ["Only English", "Only G7 languages", "At least 5 major world languages", "All 7000+ languages"],
+                TR: ["Sadece İngilizce", "Sadece G7 dilleri", "En az 5 ana dünya dili", "Dünyadaki tüm diller"],
+                ES: ["Solo inglés", "Solo G7", "Al menos 5 idiomas principales", "Todos los idiomas"],
+                FR: ["Seulement l'anglais", "Seulement le G7", "Au moins 5 langues majeures", "Toutes les langues"]
+            }, c: 2
         },
         {
-            EN: "How is it proposed to solve the 'cold start problem' for new AI agents?",
-            UA: "Як пропонується вирішити «проблему холодного старту» для нових ШІ-агентів?",
-            a: ["Require developers to pay a large deposit", "Provide them with an initial rating upfront", "Block transactions until human verification", "Incentivize users with lower fees (e.g. 1% instead of 5%) and real value"],
-            c: 3
+            UA: "Як вирішити «проблему холодного старту» агентів?",
+            EN: "How to solve the 'cold start problem' for AI agents?",
+            TR: "Yapay zeka ajanları için 'soğuk başlangıç' sorunu nasıl çözülür?",
+            ES: "¿Cómo solucionar el 'problema de inicio en frío'?",
+            FR: "Comment résoudre le 'problème de démarrage à froid' ?",
+            a: {
+                UA: ["Великий депозит", "Початковий рейтинг авансом", "Блокування до верифікації", "Нижчі комісії (1% замість 5%) та реальна цінність"],
+                EN: ["Large deposit", "Initial rating upfront", "Block until verification", "Lower fees (1% vs 5%) and real value"],
+                TR: ["Büyük depozito", "Önceden itibar", "Doğrulama gelene kadar blok", "Düşük ücretler (%1) ve gerçek değer"],
+                ES: ["Depósito grande", "Calificación inicial", "Bloqueo", "Comisiones bajas (1%) y valor real"],
+                FR: ["Dépôt important", "Évaluation initiale", "Blocage", "Frais réduits (1%) et valeur réelle"]
+            }, c: 3
         },
         {
-            EN: "What historical example does David give, comparing it to the stage of development of new AI agents?",
-            UA: "Який історичний приклад наводить Девід, порівнюючи його з етапом розвитку нових ШІ-агентів?",
-            a: ["The development of the first postal services", "Bitcoin in 2012, when the system was small but had potential", "Creation of the first Visa bank cards", "The emergence of the first graphical browser"],
-            c: 1
+            UA: "Історичний приклад Девіда для нових агентів?",
+            EN: "David's historical example for new agents?",
+            TR: "David'in yeni ajanlar için tarihsel örneği nedir?",
+            ES: "¿Ejemplo histórico de David para los agentes?",
+            FR: "Exemple historique de David pour les agents ?",
+            a: {
+                UA: ["Поштові служби", "Bitcoin у 2012 році", "Картки Visa", "Перший браузер"],
+                EN: ["Postal services", "Bitcoin in 2012", "Visa cards", "First browser"],
+                TR: ["Posta servisleri", "2012'de Bitcoin", "Visa kartları", "İlk tarayıcı"],
+                ES: ["Correos", "Bitcoin en 2012", "Tarjetas Visa", "Primer navegador"],
+                FR: ["Services postaux", "Bitcoin en 2012", "Cartes Visa", "Premier navigateur"]
+            }, c: 1
         },
         {
-            EN: "What role does Morpheus play in relation to projects such as Akash or Bittensor?",
-            UA: "Яку роль відіграє Morpheus по відношенню до таких проєктів, як Akash або Bittensor?",
-            a: ["Morpheus competes with them for computing power", "Morpheus is their main auditor", "Morpheus acts as a 'demand side', connecting users via MVM", "Morpheus replaces these projects"],
-            c: 2
+            UA: "Роль Morpheus для Akash чи Bittensor?",
+            EN: "Morpheus's role for Akash or Bittensor?",
+            TR: "Morpheus'un Akash veya Bittensor için rolü nedir?",
+            ES: "¿Rol de Morpheus para Akash o Bittensor?",
+            FR: "Rôle de Morpheus pour Akash ou Bittensor ?",
+            a: {
+                UA: ["Конкуренція", "Аудитор", "Сторона попиту (Demand side) через MVM", "Заміна інфраструктури"],
+                EN: ["Competition", "Auditor", "Demand side via MVM", "Infrastructure replacement"],
+                TR: ["Rekabet", "Denetçi", "MVM aracılığıyla talep tarafı", "Altyapı değişimi"],
+                ES: ["Competencia", "Auditor", "Lado de la demanda vía MVM", "Reemplazo"],
+                FR: ["Compétition", "Auditeur", "Côté demande via MVM", "Remplacement"]
+            }, c: 2
         },
         {
-            EN: "What is the main goal of 'atomic governance' in decentralized AI?",
-            UA: "Яка основна мета «атомного управління» у децентралізованому ШІ?",
-            a: ["To increase bureaucratic procedures", "To enable governments to control AI", "To avoid wasting time on politics and courts, focusing on value for the individual", "To create a single world government for AI"],
-            c: 2
+            UA: "Мета «атомного управління»?",
+            EN: "Goal of 'atomic governance'?",
+            TR: "Atomik yönetişimin amacı nedir?",
+            ES: "¿Objetivo de la gobernanza atómica?",
+            FR: "But de la gouvernance atomique ?",
+            a: {
+                UA: ["Більше бюрократії", "Контроль урядів", "Уникнення політики, фокус на цінності для особистості", "Світовий уряд для ШІ"],
+                EN: ["More bureaucracy", "Government control", "Avoiding politics, focus on individual value", "World government for AI"],
+                TR: ["Daha fazla bürokrasi", "Hükümet kontrolü", "Siyasetten kaçınma, bireysel değere odaklanma", "Dünya hükümeti"],
+                ES: ["Más burocracia", "Control gubernamental", "Evitar política, valor individual", "Gobierno mundial"],
+                FR: ["Plus de bureaucratie", "Contrôle gouvernemental", "Éviter la politique, valeur individuelle", "Gouvernement mondial"]
+            }, c: 2
         }
     ];
 
     async function connectWallet() {
-        if (!window.ethereum) return alert("Встановіть гаманець!");
+        if (!window.ethereum) return alert("Install MetaMask!");
         try {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             try {
@@ -148,7 +239,7 @@
                 }
             }
             userAddress = accounts[0];
-            document.getElementById('wallet-btn').innerText = "OK: " + userAddress.substring(0,6);
+            document.getElementById('wallet-btn').innerText = "Studio Connected";
             document.getElementById('start-quiz-btn').disabled = false;
         } catch (e) { console.error(e); }
     }
@@ -157,9 +248,14 @@
         currentLang = lang;
         document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('l-' + lang.toLowerCase()).classList.add('active');
-        const labels = { UA: { t: "David Johnston Quiz", s: "ПОЧАТИ" }, EN: { t: "David Johnston Quiz", s: "START" } };
-        document.getElementById('txt-title').innerText = labels[lang].t;
-        document.getElementById('start-quiz-btn').innerText = labels[lang].s;
+        const t = translations[lang];
+        document.getElementById('txt-title').innerText = t.title;
+        document.getElementById('txt-desc').innerText = t.desc;
+        document.getElementById('start-quiz-btn').innerText = t.start;
+        document.getElementById('wallet-btn').innerText = userAddress ? "Connected" : t.wallet;
+        document.getElementById('txt-finish').innerText = t.finish;
+        document.getElementById('tx-status').innerText = t.tx;
+        if(document.getElementById('quiz-screen').style.display === 'block') updateQuestionUI();
     }
 
     function startQuiz() {
@@ -170,19 +266,8 @@
 
     function showQuestion() {
         clearInterval(timer);
-        timeLeft = 20;
-        const q = questions[currentQ];
-        document.getElementById('progress').innerText = `Question ${currentQ + 1} / 10`;
-        document.getElementById('question-text').innerText = q[currentLang];
-        const container = document.getElementById('options-container');
-        container.innerHTML = '';
-        q.a.forEach((opt, i) => {
-            const b = document.createElement('button');
-            b.className = 'option-btn';
-            b.innerText = opt;
-            b.onclick = () => handleAnswer(i);
-            container.appendChild(b);
-        });
+        timeLeft = 25;
+        updateQuestionUI();
         updateTimer();
         timer = setInterval(() => {
             timeLeft--;
@@ -191,7 +276,22 @@
         }, 1000);
     }
 
-    function updateTimer() { document.getElementById('timer-bar').style.width = (timeLeft / 20 * 100) + "%"; }
+    function updateQuestionUI() {
+        const q = questions[currentQ];
+        document.getElementById('progress').innerText = (currentLang === 'UA' ? "Питання " : "Question ") + (currentQ + 1) + " / 10";
+        document.getElementById('question-text').innerText = q[currentLang];
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.a[currentLang].forEach((opt, i) => {
+            const b = document.createElement('button');
+            b.className = 'option-btn';
+            b.innerText = opt;
+            b.onclick = () => handleAnswer(i);
+            container.appendChild(b);
+        });
+    }
+
+    function updateTimer() { document.getElementById('timer-bar').style.width = (timeLeft / 25 * 100) + "%"; }
 
     function handleAnswer(idx) {
         if (idx === questions[currentQ].c) score++;
@@ -220,6 +320,7 @@
             } catch (e) { console.error(e); }
         }
     }
+    setLang('UA');
 </script>
 </body>
 </html>
