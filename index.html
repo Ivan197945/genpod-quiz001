@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GenPod Quiz - David Johnston Interview</title>
+    <title>GenPod Quiz - David Johnston</title>
     <style>
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
         .container { max-width: 600px; margin: auto; padding: 20px; flex: 1; }
@@ -14,28 +14,22 @@
         .option-btn:hover { border-color: #00f2ff; background: rgba(0, 242, 255, 0.1); }
         .timer-container { width: 100%; background: #222; height: 8px; border-radius: 4px; margin: 20px 0; overflow: hidden; }
         #timer-bar { background: #00f2ff; height: 100%; width: 100%; transition: width 1s linear; }
-        .status-ok { color: #00ff88; font-size: 14px; display: none; margin-top: 10px; font-weight: bold; }
         #progress { color: #00f2ff; margin-bottom: 10px; font-weight: bold; font-size: 18px; }
-        .lang-bar { padding: 15px; background: #111; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid #222; }
-        .lang-btn { background: transparent; border: 1px solid #444; color: #aaa; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .lang-bar { padding: 15px; background: #111; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        .lang-btn { background: transparent; border: 1px solid #444; color: #aaa; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
         .lang-btn.active { border-color: #00f2ff; color: #fff; background: rgba(0, 242, 255, 0.1); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <img src="image.png.jpeg" alt="GenPod Header" class="banner">
+    <img src="image.png.jpeg" alt="GenPod Banner" class="banner">
     
     <div id="start-screen">
         <h1 id="txt-title">David Johnston Quiz</h1>
-        <p id="txt-desc">Вікторина за матеріалами інтерв'ю</p>
-        
-        <div style="background: #111; padding: 20px; border-radius: 15px; border: 1px solid #222; margin-bottom: 20px;">
-            <button class="btn" id="wallet-btn" onclick="connectWallet()">Підключити гаманець</button>
-            <p id="wallet-status" class="status-ok">✔ Мережа GenLayer OK</p>
-        </div>
-
-        <button class="btn" id="start-quiz-btn" disabled onclick="startQuiz()" style="background: #ff0055; color: #fff; font-size: 20px;">ПОЧАТИ КВІЗ</button>
+        <p id="txt-desc">Квіз по інтерв'ю GenPod</p>
+        <button class="btn" id="wallet-btn" onclick="connectWallet()">Підключити GenLayer</button>
+        <button class="btn" id="start-quiz-btn" disabled onclick="startQuiz()" style="margin-top:20px; background:#ff0055; color:#fff;">ПОЧАТИ</button>
     </div>
 
     <div id="quiz-screen" style="display:none;">
@@ -48,7 +42,7 @@
     <div id="result-screen" style="display:none;">
         <h1 id="txt-finish">Готово!</h1>
         <p id="final-score" style="font-size: 48px; color: #00f2ff; font-weight: bold;"></p>
-        <p id="tx-info" style="color: #00ff88;">Надсилання транзакції...</p>
+        <p id="tx-status" style="color: #00ff88;">Надсилання в мережу GenLayer...</p>
     </div>
 </div>
 
@@ -68,68 +62,58 @@
     let timer;
     let timeLeft = 15;
 
-    const GENLAYER_CONFIG = {
-        chainId: '0x1c', 
+    const GENLAYER_RPC = {
+        chainId: '0x1c', // 28 - GenLayer Testnet
         chainName: 'GenLayer Testnet',
-        rpcUrls: ['https://rpc.genlayer.com'], 
+        rpcUrls: ['https://rpc.genlayer.com'],
         nativeCurrency: { name: 'GEN', symbol: 'GEN', decimals: 18 },
         blockExplorerUrls: ['https://explorer.genlayer.com']
     };
 
-    const translations = {
-        UA: { title: "David Johnston Quiz", desc: "Вікторина за інтерв'ю", wallet: "Підключити гаманець", start: "ПОЧАТИ КВІЗ", finish: "Готово!", tx: "Надсилання в GenLayer..." },
-        EN: { title: "David Johnston Quiz", desc: "Interview Quiz", wallet: "Connect Wallet", start: "START QUIZ", finish: "Finished!", tx: "Sending to GenLayer..." },
-        TR: { title: "David Johnston Quiz", desc: "Röportaj Testi", wallet: "Cüzdanı Bağla", start: "BAŞLAT", finish: "Bitti!", tx: "GenLayer'a gönderiliyor..." },
-        ES: { title: "Quiz David Johnston", desc: "Quiz de Entrevista", wallet: "Conectar", start: "EMPEZAR", finish: "¡Terminado!", tx: "Enviando..." },
-        FR: { title: "Quiz David Johnston", desc: "Quiz Interview", wallet: "Connecter", start: "COMMENCER", finish: "Terminé!", tx: "Envoi..." }
-    };
-
     const questions = [
-        { UA: "З якою системою Девід порівнює централізований ШІ?", EN: "What system does David compare centralized AI to?", TR: "Merkezi yapay zekayı neyle kıyaslıyor?", ES: "¿Con qué compara la IA centralizada?", FR: "À quoi compare-t-il l'IA centralisée?", a: ["Soviet Union", "Roman Empire", "Federal Reserve", "Web2"], c: 0 },
-        { UA: "Головна мета Девіда?", EN: "David's main goal?", TR: "David'in ana hedefi?", ES: "¿Objetivo principal?", FR: "Objectif principal?", a: ["Profit", "Human Freedom", "Fast Code", "AI Takeover"], c: 1 },
-        { UA: "Нове 'вузьке місце' ШІ за Девідом?", EN: "New AI bottleneck?", TR: "Yeni darboğaz?", ES: "¿Nuevo cuello de botella?", FR: "Nouveau goulot?", a: ["GPU", "Internet", "Agency describing", "Energy"], c: 2 },
-        { UA: "Скільки агентів до кінця року?", EN: "How many agents by year end?", TR: "Yıl sonuna kadar kaç ajan?", ES: "¿Cuántos agentes?", FR: "Combien d'agents?", a: ["10", "50", "100", "1000"], c: 2 },
-        { UA: "Закон Джонстона: що буде децентралізовано?", EN: "Johnston’s Law: what will be decentralized?", TR: "Johnston Yasası ne der?", ES: "¿Qué se descentralizará?", FR: "Qu'est-ce qui sera décentralisé?", a: ["Everything possible", "Only Money", "Nothing", "Social Media"], c: 0 },
-        { UA: "Потужність ШІ до людського мозку?", EN: "AI power vs human brain?", TR: "İnsan beynine kıyasla yapay zeka?", ES: "¿Potencia de IA vs cerebro?", FR: "Puissance IA vs cerveau?", a: ["2x", "5x", "10x", "Equal"], c: 1 },
-        { UA: "Стандарт платежів для агентів?", EN: "Payment standard for agents?", TR: "Ajanlar için ödeme standardı?", ES: "¿Estándar de pago?", FR: "Standard de paiement?", a: ["ERC-20", "x402", "Lightning", "Visa"], c: 1 },
-        { UA: "Чому ШІ + Крипто?", EN: "Why AI + Crypto?", TR: "Neden yapay zeka ve kripto?", ES: "¿Por qué IA + Cripto?", FR: "Pourquoi IA + Crypto?", a: ["Hype", "Programmable money", "Mining", "Security"], c: 1 },
-        { UA: "Назва інфраструктури для агентів?", EN: "Infrastructure name for agents?", TR: "Ajan altyapısının adı?", ES: "¿Nombre de la infraestructura?", FR: "Nom de l'infrastructure?", a: ["Ethereum", "Morpheus VM", "Solana", "OpenAI"], c: 1 },
-        { UA: "Що блокчейн фіксить у фінансах?", EN: "What does blockchain fix in finance?", TR: "Blokzincir neyi düzeltir?", ES: "¿Qué arregla el blockchain?", FR: "Que corrige la blockchain?", a: ["Speed", "Monetary freedom", "Design", "Tax"], c: 1 }
+        { UA: "З чим Девід порівнює централізовані ШІ-моделі?", EN: "What does David compare centralized AI models to?", a: ["Soviet Union", "Roman Empire", "Wall Street", "Public Library"], c: 0 },
+        { UA: "Який новий платіжний стандарт Девід згадує для ШІ-агентів?", EN: "Which new payment standard for AI agents does David mention?", a: ["ERC-20", "x402 (Coinbase)", "Lightning", "SWIFT"], c: 1 },
+        { UA: "Що Девід називає новим вузьким місцем (bottleneck) розвитку ШІ?", EN: "What does David call the new bottleneck for AI growth?", a: ["GPU supply", "Agency describing", "Electricity", "Memory"], c: 1 },
+        { UA: "Скільки автономних агентів Девід планує запустити для себе до кінця року?", EN: "How many autonomous agents does David plan to run for himself by year-end?", a: ["10", "50", "100", "500"], c: 2 },
+        { UA: "Яку назву має інфраструктура (VM), про яку говорить Девід?", EN: "What is the name of the infrastructure (VM) David talks about?", a: ["Ethereum VM", "Morpheus VM", "Solana VM", "Gen VM"], c: 1 },
+        { UA: "Згідно з 'Законом Джонстона', що буде децентралізовано?", EN: "According to 'Johnston’s Law', what will be decentralized?", a: ["Only Money", "Only Apps", "Everything that can be", "Nothing"], c: 2 },
+        { UA: "Яке співвідношення ШІ-інтелекту до людського Девід очікує незабаром?", EN: "What AI-to-human intelligence ratio does David expect soon?", a: ["2x", "5x", "10x", "100x"], c: 1 },
+        { UA: "Що є головною філософською ціллю Девіда в технологіях?", EN: "What is David's main philosophical goal in technology?", a: ["Profit", "Human Freedom", "Efficiency", "Global Control"], c: 1 },
+        { UA: "Чому Девід вважає блокчейн ідеальним для ШІ?", EN: "Why does David think blockchain is perfect for AI?", a: ["It's faster", "Programmable money", "It's cheaper", "Better UI"], c: 1 },
+        { UA: "Що блокчейн дозволяє кожній людині мати в світі ШІ?", EN: "What does blockchain allow every person to have in an AI world?", a: ["Free GPU", "Sovereignty over agents", "Fast Internet", "Unlimited Data"], c: 1 }
     ];
 
-    function setLang(lang) {
-        currentLang = lang;
-        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('l-' + lang.toLowerCase()).classList.add('active');
-        const t = translations[lang];
-        document.getElementById('txt-title').innerText = t.title;
-        document.getElementById('txt-desc').innerText = t.desc;
-        if(!userAddress) document.getElementById('wallet-btn').innerText = t.wallet;
-        document.getElementById('start-quiz-btn').innerText = t.start;
-    }
-
     async function connectWallet() {
-        if (!window.ethereum) return alert("Install MetaMask!");
+        if (!window.ethereum) return alert("Встановіть MetaMask!");
         try {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             try {
                 await window.ethereum.request({
                     method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: GENLAYER_CONFIG.chainId }],
+                    params: [{ chainId: GENLAYER_RPC.chainId }],
                 });
             } catch (err) {
                 if (err.code === 4902) {
                     await window.ethereum.request({
                         method: 'wallet_addEthereumChain',
-                        params: [GENLAYER_CONFIG],
+                        params: [GENLAYER_RPC],
                     });
                 }
             }
             userAddress = accounts[0];
-            document.getElementById('wallet-status').style.display = 'block';
-            document.getElementById('wallet-btn').innerText = "OK: " + userAddress.substring(0,6);
+            document.getElementById('wallet-btn').innerText = "Мережа: GenLayer";
             document.getElementById('start-quiz-btn').disabled = false;
-        } catch (e) { console.error(e); }
+        } catch (e) { alert("Помилка підключення"); }
+    }
+
+    function setLang(lang) {
+        currentLang = lang;
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('l-' + lang.toLowerCase()).classList.add('active');
+        // Оновлюємо тексти
+        const labels = { UA: { t: "David Johnston Quiz", s: "ПОЧАТИ" }, EN: { t: "David Johnston Quiz", s: "START" } }; // Спрощено для прикладу
+        document.getElementById('txt-title').innerText = labels[lang]?.t || labels.EN.t;
+        document.getElementById('start-quiz-btn').innerText = labels[lang]?.s || labels.EN.s;
     }
 
     function startQuiz() {
@@ -141,10 +125,9 @@
     function showQuestion() {
         clearInterval(timer);
         timeLeft = 15;
-        updateTimerBar();
         const q = questions[currentQ];
-        document.getElementById('progress').innerText = (currentLang === 'UA' ? 'Питання ' : 'Question ') + (currentQ + 1) + " / 10";
-        document.getElementById('question-text').innerText = q[currentLang];
+        document.getElementById('progress').innerText = `Question ${currentQ + 1} / 10`;
+        document.getElementById('question-text').innerText = q[currentLang] || q.EN;
         const container = document.getElementById('options-container');
         container.innerHTML = '';
         q.a.forEach((opt, i) => {
@@ -154,17 +137,17 @@
             b.onclick = () => handleAnswer(i);
             container.appendChild(b);
         });
+        updateTimer();
         timer = setInterval(() => {
             timeLeft--;
-            updateTimerBar();
+            updateTimer();
             if (timeLeft <= 0) handleAnswer(-1);
         }, 1000);
     }
 
-    function updateTimerBar() { document.getElementById('timer-bar').style.width = (timeLeft / 15 * 100) + "%"; }
+    function updateTimer() { document.getElementById('timer-bar').style.width = (timeLeft / 15 * 100) + "%"; }
 
     function handleAnswer(idx) {
-        clearInterval(timer);
         if (idx === questions[currentQ].c) score++;
         currentQ++;
         if (currentQ < 10) showQuestion();
@@ -172,21 +155,27 @@
     }
 
     async function finish() {
+        clearInterval(timer);
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('final-score').innerText = score + " / 10";
+        document.getElementById('final-score').innerText = `${score} / 10`;
+        
         if (userAddress) {
             try {
+                // ПРИМУСОВЕ надсилання в GenLayer
                 await window.ethereum.request({
                     method: 'eth_sendTransaction',
                     params: [{
                         to: "0x6911e189a3558Bf5c0721AA234C80AaF17cFa383",
                         from: userAddress,
                         value: '0x0',
-                        data: '0x' + btoa("Score:" + score).split('').map(c=>c.charCodeAt(0).toString(16).padStart(2,'0')).join('')
+                        data: '0x' + btoa("QuizResult:" + score).split('').map(c=>c.charCodeAt(0).toString(16)).join('')
                     }]
                 });
-            } catch (e) {}
+                document.getElementById('tx-status').innerText = "Транзакція надіслана в GenLayer!";
+            } catch (e) {
+                document.getElementById('tx-status').innerText = "Помилка транзакції.";
+            }
         }
     }
 </script>
