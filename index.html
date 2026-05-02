@@ -14,8 +14,8 @@
         .option-btn { display: block; width: 100%; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid #333; padding: 15px; margin: 10px 0; border-radius: 10px; cursor: pointer; text-align: left; }
         .option-btn:hover { border-color: #00f2ff; background: rgba(0, 242, 255, 0.1); }
         #timer { font-size: 32px; color: #ff0055; font-weight: bold; margin-bottom: 10px; }
-        .lang-bar { padding: 20px; background: #111; border-top: 1px solid #222; display: flex; justify-content: center; gap: 15px; }
-        .lang-btn { background: transparent; border: 1px solid #444; color: #aaa; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        .lang-bar { padding: 20px; background: #111; border-top: 1px solid #222; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        .lang-btn { background: transparent; border: 1px solid #444; color: #aaa; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; }
         .lang-btn.active { border-color: #00f2ff; color: #fff; background: rgba(0, 242, 255, 0.1); }
         .verification-step { background: #111; padding: 15px; border-radius: 10px; margin: 10px 0; border: 1px solid #222; }
         .status-ok { color: #00ff88; font-size: 12px; display: none; margin-top: 5px; }
@@ -57,47 +57,56 @@
     </div>
 </div>
 
-<!-- Оновлена мовна панель: Тільки UA, FR, ES -->
+<!-- Мовна панель: 5 прапорів -->
 <div class="lang-bar">
-    <button class="lang-btn active" onclick="setLang('UA')">🇺🇦 UA</button>
-    <button class="lang-btn" onclick="setLang('FR')">🇫🇷 FR</button>
-    <button class="lang-btn" onclick="setLang('ES')">🇪🇸 ES</button>
+    <button class="lang-btn active" id="btn-en" onclick="setLang('EN')">🇺🇸 EN</button>
+    <button class="lang-btn" id="btn-fr" onclick="setLang('FR')">🇫🇷 FR</button>
+    <button class="lang-btn" id="btn-es" onclick="setLang('ES')">🇪🇸 ES</button>
+    <button class="lang-btn" id="btn-tr" onclick="setLang('TR')">🇹🇷 TR</button>
+    <button class="lang-btn" id="btn-ua" onclick="setLang('UA')">🇺🇦 UA</button>
 </div>
 
 <script>
-    let currentLang = 'UA';
+    let currentLang = 'EN';
     let walletConnected = false;
     let twitterFollowed = false;
 
     const translations = {
-        UA: { title: "Вітаємо у GenPod Quiz", subtitle: "Виконайте кроки для входу:", wallet: "1. Підключити гаманець", follow: "2. Підписатись в X", start: "ПОЧАТИ КВІЗ", finish: "Квіз завершено!" },
+        EN: { title: "Welcome to GenPod Quiz", subtitle: "Complete steps to unlock:", wallet: "1. Connect Wallet", follow: "2. Follow on X", start: "START QUIZ", finish: "Quiz Finished!" },
         FR: { title: "Bienvenue sur GenPod Quiz", subtitle: "Étapes pour déverrouiller:", wallet: "1. Connecter le portefeuille", follow: "2. Suivre sur X", start: "COMMENCER", finish: "Quiz terminé!" },
-        ES: { title: "Bienvenido a GenPod Quiz", subtitle: "Pasos para desbloquear:", wallet: "1. Conectar billetera", follow: "2. Seguir en X", start: "EMPEZAR", finish: "¡Quiz terminado!" }
+        ES: { title: "Bienvenido a GenPod Quiz", subtitle: "Pasos para desbloquear:", wallet: "1. Conectar billetera", follow: "2. Seguir en X", start: "EMPEZAR", finish: "¡Quiz terminado!" },
+        TR: { title: "GenPod Quiz'e Hoş Geldiniz", subtitle: "Kilidi açmak için adımları tamamlayın:", wallet: "1. Cüzdanı Bağla", follow: "2. X'te Takip Et", start: "QUIZ'E BAŞLA", finish: "Quiz Bitti!" },
+        UA: { title: "Вітаємо у GenPod Quiz", subtitle: "Виконайте кроки для входу:", wallet: "1. Підключити гаманець", follow: "2. Підписатись в X", start: "ПОЧАТИ КВІЗ", finish: "Квіз завершено!" }
     };
 
     const questions = [
         {
-            UA: { q: "Яка головна мета Девіда Джонстона?", a: ["Прибуток", "Свобода людини", "Регуляції", "Закриті системи"], c: 1 },
+            EN: { q: "What is David Johnston’s primary goal?", a: ["Profit", "Human Freedom", "Regulation", "Closed systems"], c: 1 },
             FR: { q: "Quel est l'objectif de David?", a: ["Profit", "Liberté humaine", "Régulation", "Systèmes fermés"], c: 1 },
-            ES: { q: "¿Cuál es el objetivo de David?", a: ["Beneficio", "Libertad humana", "Regulación", "Sistemas cerrados"], c: 1 }
+            ES: { q: "¿Cuál es el objetivo de David?", a: ["Beneficio", "Libertad humana", "Regulación", "Sistemas cerrados"], c: 1 },
+            TR: { q: "David Johnston'ın temel amacı nedir?", a: ["Kâr", "İnsan Özgürlüğü", "Düzenleme", "Kapalı sistemler"], c: 1 },
+            UA: { q: "Яка головна мета Девіда Джонстона?", a: ["Прибуток", "Свобода людини", "Регуляції", "Закриті системи"], c: 1 }
         },
         {
-            UA: { q: "На що схожий централізований ШІ?", a: ["СРСР", "США", "Сінгапур", "ЄС"], c: 0 },
-            FR: { q: "À quoi ressemble l'IA centralisée?", a: ["Union Soviétique", "USA", "Singapour", "UE"], c: 0 },
-            ES: { q: "¿A qué se parece la IA centralizada?", a: ["Unión Soviética", "USA", "Singapur", "UE"], c: 0 }
+            EN: { q: "Centralized AI is compared to which economy?", a: ["Soviet Union", "USA", "Singapore", "EU"], c: 0 },
+            FR: { q: "L'IA centralisée est comparée à quelle économie?", a: ["Union Soviétique", "USA", "Singapour", "UE"], c: 0 },
+            ES: { q: "¿La IA centralizada se compara con qué economía?", a: ["Unión Soviética", "USA", "Singapur", "UE"], c: 0 },
+            TR: { q: "Merkezi yapay zeka hangi ekonomiye benzetiliyor?", a: ["Sovyetler Birliği", "ABD", "Singapur", "AB"], c: 0 },
+            UA: { q: "На що схожий централізований ШІ?", a: ["СРСР", "США", "Сінгапур", "ЄС"], c: 0 }
         },
         {
-            UA: { q: "Що є новим 'вузьким місцем' в епоху ШІ?", a: ["Швидкість інтернету", "Навички кодування", "Опис завдання агенту", "Залізо"], c: 2 },
-            FR: { q: "Quel est le nouveau goulot d'étranglement?", a: ["Vitesse Web", "Codage", "Description de l'agence", "Matériel"], c: 2 },
-            ES: { q: "¿Cuál es el nuevo cuello de botella?", a: ["Velocidad Web", "Codificación", "Descripción de la agencia", "Hardware"], c: 2 }
+            EN: { q: "What is the new 'bottleneck' in the AI age?", a: ["Internet speed", "Coding skills", "Describing the intent", "Hardware"], c: 2 },
+            FR: { q: "Quel est le nouveau goulot d'étranglement?", a: ["Vitesse Web", "Codage", "Description de l'intention", "Matériel"], c: 2 },
+            ES: { q: "¿Cuál es el nuevo cuello de botella?", a: ["Velocidad Web", "Codificación", "Descripción de la intención", "Hardware"], c: 2 },
+            TR: { q: "Yapay zeka çağındaki yeni 'darboğaz' nedir?", a: ["İnternet hızı", "Kodlama becerileri", "Amacı tanımlamak", "Donanım"], c: 2 },
+            UA: { q: "Що є новим 'вузьким місцем' в епоху ШІ?", a: ["Швидкість інтернету", "Навички кодування", "Опис завдання агенту", "Залізо"], c: 2 }
         }
-        // Тут можна додати ще 7 питань за аналогією
     ];
 
     function setLang(lang) {
         currentLang = lang;
         document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-        if (event) event.target.classList.add('active');
+        document.getElementById('btn-' + lang.toLowerCase()).classList.add('active');
         
         const t = translations[lang];
         document.getElementById('txt-title').innerText = t.title;
@@ -176,8 +185,7 @@
         window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`);
     }
 
-    // Встановлюємо мову за замовчуванням
-    setLang('UA');
+    setLang('EN');
 </script>
 </body>
 </html>
