@@ -1,25 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GenPod Quiz | Web3 & GenLayer</title>
+    <title>GenPod Quiz</title>
     <style>
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
         .container { max-width: 600px; margin: auto; padding: 20px; flex: 1; }
         img.banner { width: 100%; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); }
-        .btn { background: #00f2ff; border: none; color: #000; padding: 15px 30px; font-weight: bold; cursor: pointer; border-radius: 30px; margin: 10px; transition: 0.3s; width: 80%; }
+        .btn { background: #00f2ff; border: none; color: #000; padding: 15px 30px; font-weight: bold; cursor: pointer; border-radius: 30px; margin: 10px; transition: 0.3s; width: 90%; font-size: 16px; }
         .btn:disabled { background: #444; cursor: not-allowed; color: #888; }
         .btn-x { background: #fff; color: #000; }
         .btn-discord { background: #5865F2; color: #fff; }
         .option-btn { display: block; width: 100%; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid #333; padding: 15px; margin: 10px 0; border-radius: 10px; cursor: pointer; text-align: left; }
         .option-btn:hover { border-color: #00f2ff; background: rgba(0, 242, 255, 0.1); }
-        #timer { font-size: 32px; color: #ff0055; font-weight: bold; margin-bottom: 10px; }
-        .lang-bar { padding: 20px; background: #111; border-top: 1px solid #222; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        .lang-btn { background: transparent; border: 1px solid #444; color: #aaa; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; }
-        .lang-btn.active { border-color: #00f2ff; color: #fff; background: rgba(0, 242, 255, 0.1); }
         .verification-step { background: #111; padding: 15px; border-radius: 10px; margin: 10px 0; border: 1px solid #222; }
-        .status-ok { color: #00ff88; font-size: 13px; display: none; margin-top: 8px; font-weight: bold; }
+        .status-ok { color: #00ff88; font-size: 14px; display: none; margin-top: 10px; font-weight: bold; }
+        .lang-bar { padding: 15px; background: #111; display: flex; justify-content: center; gap: 10px; }
+        .lang-btn { background: transparent; border: 1px solid #444; color: #aaa; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .lang-btn.active { border-color: #00f2ff; color: #fff; }
     </style>
 </head>
 <body>
@@ -28,125 +27,83 @@
     <img src="image.png.jpeg" alt="GenPod Header" class="banner">
     
     <div id="start-screen">
-        <h1 id="txt-title">Welcome to GenPod Quiz</h1>
-        <p id="txt-subtitle">Complete steps to unlock:</p>
+        <h1>Ласкаво просимо до вікторини GenPod</h1>
+        <p style="color: #00f2ff;">Виконайте ОДНУ будь-яку дію для розблокування:</p>
         
         <div class="verification-step">
-            <button class="btn" id="wallet-btn" onclick="connectWallet()">1. Connect Wallet</button>
-            <p id="wallet-status" class="status-ok">✔ Wallet Connected</p>
+            <button class="btn" id="wallet-btn" onclick="connectWallet()">1. Підключити гаманець</button>
+            <p id="wallet-status" class="status-ok">✔ Гаманець підключено</p>
         </div>
 
         <div class="verification-step">
-            <button class="btn btn-x" id="btn-x-link" onclick="linkTwitter()">2. Follow on X</button>
-            <p id="twitter-status" class="status-ok">✔ X Linked</p>
+            <button class="btn btn-x" id="x-btn" onclick="linkX()">2. Слідкуйте за X (Twitter)</button>
+            <p id="x-status" class="status-ok">✔ X підключено</p>
         </div>
 
         <div class="verification-step">
-            <button class="btn btn-discord" id="btn-dc-link" onclick="linkDiscord()">3. Join Discord</button>
-            <p id="discord-status" class="status-ok">✔ Discord Linked</p>
+            <button class="btn btn-discord" id="dc-btn" onclick="linkDC()">3. Приєднатися до Discord</button>
+            <p id="dc-status" class="status-ok">✔ Discord підключено</p>
         </div>
 
-        <button class="btn" id="main-start-btn" disabled onclick="startQuiz()" style="width: 100%; font-size: 20px; margin-top: 20px;">START QUIZ</button>
+        <button class="btn" id="start-quiz-btn" disabled onclick="startQuiz()" style="margin-top: 20px; background: #ff0055; color: #fff;">ПОЧАТИ ВІКТОРИНУ</button>
     </div>
 
     <div id="quiz-screen" style="display:none;">
-        <div id="timer">15</div>
         <h2 id="question-text"></h2>
         <div id="options-container"></div>
     </div>
 
     <div id="result-screen" style="display:none;">
-        <img src="image.png.jpeg" style="width: 80px; border-radius: 50%;">
-        <h1 id="txt-finish">Quiz Finished!</h1>
-        <p id="user-info" style="color: #aaa; margin: 0;"></p>
-        <p id="final-score" style="font-size: 50px; color: #00f2ff; font-weight: bold; margin: 10px 0;"></p>
-        <p style="font-size: 12px; color: #00ff88;">Transaction sent to GenLayer Contract</p>
-        <button class="btn btn-x" onclick="shareOnX()">Share Result on X</button>
+        <h1>Вікторину завершено!</h1>
+        <p id="final-score" style="font-size: 40px; color: #00f2ff;"></p>
+        <p id="tx-status" style="color: #00ff88;">Надсилання транзакції в GenLayer...</p>
     </div>
 </div>
 
-<div class="lang-bar">
-    <button class="lang-btn active" id="btn-en" onclick="setLang('EN')">🇺🇸 EN</button>
-    <button class="lang-btn" id="btn-fr" onclick="setLang('FR')">🇫🇷 FR</button>
-    <button class="lang-btn" id="btn-es" onclick="setLang('ES')">🇪🇸 ES</button>
-    <button class="lang-btn" id="btn-tr" onclick="setLang('TR')">🇹🇷 TR</button>
-    <button class="lang-btn" id="btn-ua" onclick="setLang('UA')">🇺🇦 UA</button>
-</div>
-
 <script>
-    let currentLang = 'EN';
-    let walletConnected = false;
-    let twitterFollowed = false;
-    let discordJoined = false;
-    let userX = "";
-    let userDC = "";
-    const contractAddress = "0x6911e189a3558Bf5c0721AA234C80AaF17cFa383";
+    let unlocked = false;
+    let userAddress = "";
+    const contractAddr = "0x6911e189a3558Bf5c0721AA234C80AaF17cFa383";
 
-    const translations = {
-        EN: { title: "Welcome to GenPod Quiz", subtitle: "Steps to unlock:", wallet: "1. Connect Wallet", follow: "2. Follow on X", discord: "3. Join Discord", start: "START QUIZ", finish: "Quiz Finished!" },
-        UA: { title: "Вітаємо у GenPod Quiz", subtitle: "Кроки для входу:", wallet: "1. Підключити гаманець", follow: "2. Підписатись в X", discord: "3. Увійти в Discord", start: "ПОЧАТИ КВІЗ", finish: "Квіз завершено!" },
-        TR: { title: "GenPod Quiz'e Hoş Geldiniz", subtitle: "Kilit açma adımları:", wallet: "1. Cüzdanı Bağla", follow: "2. X'te Takip Et", discord: "3. Discord'a Katıl", start: "BAŞLA", finish: "Quiz Bitti!" },
-        FR: { title: "Bienvenue sur GenPod Quiz", subtitle: "Étapes à suivre:", wallet: "1. Connecter portefeuille", follow: "2. Suivre sur X", discord: "3. Discord", start: "COMMENCER", finish: "Quiz terminé!" },
-        ES: { title: "Bienvenido a GenPod Quiz", subtitle: "Pasos para entrar:", wallet: "1. Conectar billetera", follow: "2. Seguir en X", discord: "3. Discord", start: "EMPEZAR", finish: "¡Quiz terminado!" }
-    };
-
-    const questions = [
-        {
-            EN: { q: "What is David Johnston’s primary goal?", a: ["Profit", "Human Freedom", "Regulation", "Closed systems"], c: 1 },
-            UA: { q: "Яка головна мета Девіда Джонстона?", a: ["Прибуток", "Свобода людини", "Регуляції", "Закриті системи"], c: 1 },
-            TR: { q: "David Johnston'ın temel amacı nedir?", a: ["Kâr", "İnsan Özgürlüğü", "Düzenleme", "Kapalı sistemler"], c: 1 }
-        },
-        {
-            EN: { q: "Centralized AI is compared to which economy?", a: ["Soviet Union", "USA", "Singapore", "EU"], c: 0 },
-            UA: { q: "На що схожий централізований ШІ?", a: ["СРСР", "США", "Сінгапур", "ЄС"], c: 0 },
-            TR: { q: "Merkezi yapay zeka hangi ekonomiye benzetiliyor?", a: ["Sovyetler Birliği", "ABD", "Singapur", "AB"], c: 0 }
-        }
-    ];
-
-    function setLang(lang) {
-        currentLang = lang;
-        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-' + lang.toLowerCase()).classList.add('active');
-        const t = translations[lang];
-        document.getElementById('txt-title').innerText = t.title;
-        document.getElementById('txt-subtitle').innerText = t.subtitle;
-        if(!walletConnected) document.getElementById('wallet-btn').innerText = t.wallet;
-        if(!twitterFollowed) document.getElementById('btn-x-link').innerText = t.follow;
-        if(!discordJoined) document.getElementById('btn-dc-link').innerText = t.discord;
-        document.getElementById('main-start-btn').innerText = t.start;
-        document.getElementById('txt-finish').innerText = t.finish;
+    function unlock() {
+        unlocked = true;
+        document.getElementById('start-quiz-btn').disabled = false;
     }
 
     async function connectWallet() {
         if (window.ethereum) {
             try {
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                walletConnected = true;
+                userAddress = accounts[0];
+                document.getElementById('wallet-btn').innerText = "Підключено: " + userAddress.substring(0,6) + "...";
                 document.getElementById('wallet-status').style.display = 'block';
-                document.getElementById('wallet-btn').innerText = "Linked: " + accounts[0].substring(0,6)+"...";
-                checkUnlock();
-            } catch (e) { alert("Error"); }
-        } else { alert("Install MetaMask!"); }
+                unlock();
+            } catch (e) { alert("Помилка підключення"); }
+        } else { alert("Встановіть MetaMask!"); }
     }
 
-    function linkTwitter() {
+    function linkX() {
         window.open('https://x.com/GenLayer', '_blank');
-        let handle = prompt("Enter your X handle (@username):");
-        if(handle) { userX = handle; twitterFollowed = true; document.getElementById('twitter-status').style.display = 'block'; checkUnlock(); }
+        let nick = prompt("Введіть ваш нік у X (@username):");
+        if(nick) {
+            document.getElementById('x-status').innerText = "✔ Підключено: " + nick;
+            document.getElementById('x-status').style.display = 'block';
+            unlock();
+        }
     }
 
-    function linkDiscord() {
-        window.open('https://discord.gg/yourlink', '_blank');
-        let handle = prompt("Enter Discord Username:");
-        if(handle) { userDC = handle; discordJoined = true; document.getElementById('discord-status').style.display = 'block'; checkUnlock(); }
+    function linkDC() {
+        window.open('https://discord.gg/genlayer', '_blank');
+        let nick = prompt("Введіть ваш Discord нік:");
+        if(nick) {
+            document.getElementById('dc-status').innerText = "✔ Підключено: " + nick;
+            document.getElementById('dc-status').style.display = 'block';
+            unlock();
+        }
     }
 
-    function checkUnlock() {
-        if(walletConnected && twitterFollowed && discordJoined) document.getElementById('main-start-btn').disabled = false;
-    }
-
-    let currentQ = 0; let score = 0; let timer; let timeLeft = 15;
-
+    // Логіка квізу (спрощена для прикладу)
+    let score = 0;
     function startQuiz() {
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('quiz-screen').style.display = 'block';
@@ -154,57 +111,36 @@
     }
 
     function showQuestion() {
-        clearInterval(timer); timeLeft = 15;
-        document.getElementById('timer').innerText = timeLeft;
-        const qData = questions[currentQ][currentLang] || questions[currentQ]['EN'];
-        document.getElementById('question-text').innerText = qData.q;
+        document.getElementById('question-text').innerText = "Яка головна мета Девіда Джонстона?";
         const container = document.getElementById('options-container');
-        container.innerHTML = '';
-        qData.a.forEach((opt, i) => {
+        const options = ["Прибуток", "Свобода людини", "Регуляції"];
+        options.forEach((opt, i) => {
             const b = document.createElement('button');
             b.className = 'option-btn';
             b.innerText = opt;
-            b.onclick = () => { if(i === qData.c) score++; nextQ(); };
+            b.onclick = () => { if(i === 1) score = 1; finish(); };
             container.appendChild(b);
         });
-        timer = setInterval(() => { timeLeft--; document.getElementById('timer').innerText = timeLeft; if(timeLeft <= 0) nextQ(); }, 1000);
     }
 
-    function nextQ() {
-        currentQ++;
-        if(currentQ < questions.length) showQuestion();
-        else showResult();
-    }
-
-    async function showResult() {
-        clearInterval(timer);
+    async function finish() {
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('user-info').innerText = `User: ${userX} | Discord: ${userDC}`;
-        document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
-
-        // ТРАНЗАКЦІЯ В GENLAYER
-        if (window.ethereum) {
+        document.getElementById('final-score').innerText = score + " / 1";
+        
+        if (window.ethereum && userAddress) {
             try {
-                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
                 const txParams = {
-                    to: contractAddress,
-                    from: accounts[0],
+                    to: contractAddr,
+                    from: userAddress,
                     value: '0x0',
-                    data: '0x' + btoa(`Score:${score}`).split('').map(c=>c.charCodeAt(0).toString(16)).join('')
+                    data: '0x' + btoa("Score:" + score).split('').map(c=>c.charCodeAt(0).toString(16)).join('')
                 };
                 await window.ethereum.request({ method: 'eth_sendTransaction', params: [txParams] });
-                alert("Score recorded on GenLayer Testnet!");
-            } catch (e) { console.log("TX Cancelled"); }
+                document.getElementById('tx-status').innerText = "Транзакція успішна!";
+            } catch (e) { document.getElementById('tx-status').innerText = "Транзакція скасована"; }
         }
     }
-
-    function shareOnX() {
-        const text = `I scored ${score}/${questions.length} on @GenLayer Quiz! 🚀 Handle: ${userX}`;
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`);
-    }
-
-    setLang('EN');
 </script>
 </body>
 </html>
