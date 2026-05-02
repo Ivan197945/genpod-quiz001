@@ -5,105 +5,132 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GenPod Quiz</title>
     <style>
-        body { 
-            background: #000; 
-            color: #fff; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            text-align: center; 
-            margin: 0; 
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
+        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
         .container { max-width: 600px; margin: auto; padding: 20px; flex: 1; }
-        img.banner { width: 100%; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); }
-        h1 { color: #00f2ff; text-shadow: 0 0 10px #00f2ff; }
-        .btn { 
-            background: #00f2ff; border: none; color: #000; padding: 15px 40px; 
-            font-weight: bold; cursor: pointer; border-radius: 30px; 
-            margin: 10px; transition: 0.3s; font-size: 16px;
-        }
-        .btn:hover { box-shadow: 0 0 20px #00f2ff; transform: scale(1.05); }
-        .option-btn { 
-            display: block; width: 100%; background: rgba(255,255,255,0.05); 
-            color: #fff; border: 1px solid #333; padding: 15px; 
-            margin: 10px 0; border-radius: 10px; cursor: pointer; 
-            text-align: left; transition: 0.2s; font-size: 15px;
-        }
+        img.banner { width: 100%; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); }
+        .btn { background: #00f2ff; border: none; color: #000; padding: 15px 30px; font-weight: bold; cursor: pointer; border-radius: 30px; margin: 10px; transition: 0.3s; }
+        .btn:disabled { background: #555; cursor: not-allowed; }
+        .btn-x { background: #fff; color: #000; }
+        .option-btn { display: block; width: 100%; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid #333; padding: 15px; margin: 10px 0; border-radius: 10px; cursor: pointer; text-align: left; }
         .option-btn:hover { border-color: #00f2ff; background: rgba(0, 242, 255, 0.1); }
         #timer { font-size: 32px; color: #ff0055; font-weight: bold; margin-bottom: 10px; }
-        .lang-bar { 
-            padding: 20px; 
-            background: #111; 
-            border-top: 1px solid #222;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .lang-bar button { 
-            background: transparent; border: 1px solid #444; color: #aaa; 
-            padding: 5px 10px; border-radius: 5px; cursor: pointer; 
-        }
-        .lang-bar button:hover { border-color: #fff; color: #fff; }
-        #progress { color: #555; margin-bottom: 20px; }
+        .lang-bar { padding: 20px; background: #111; border-top: 1px solid #222; display: flex; justify-content: center; gap: 15px; }
+        .lang-btn { background: transparent; border: 1px solid #444; color: #aaa; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        .lang-btn.active { border-color: #00f2ff; color: #fff; background: rgba(0, 242, 255, 0.1); }
+        .verification-step { background: #111; padding: 15px; border-radius: 10px; margin: 10px 0; border: 1px solid #222; }
+        .status-ok { color: #00ff88; font-size: 12px; display: none; margin-top: 5px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- Змінено назву файлу на ту, що на твоєму фото -->
     <img src="image.png.jpeg" alt="GenPod Header" class="banner">
     
     <div id="start-screen">
-        <h1>GenPod Quiz</h1>
-        <p>Are you a freedom maximalist? Test your knowledge.</p>
-        <button class="btn" onclick="startQuiz()">START THE QUIZ</button>
+        <h1 id="txt-title">Welcome to GenPod Quiz</h1>
+        <p id="txt-subtitle">Complete steps to unlock:</p>
+        
+        <div class="verification-step">
+            <button class="btn" id="wallet-btn" onclick="connectWallet()">1. Connect Wallet</button>
+            <p id="wallet-status" class="status-ok">✔ Wallet Connected</p>
+        </div>
+
+        <div class="verification-step">
+            <button class="btn btn-x" onclick="markTwitter()">2. Follow on X</button>
+            <p id="twitter-status" class="status-ok">✔ Followed</p>
+        </div>
+
+        <button class="btn" id="main-start-btn" disabled onclick="startQuiz()" style="width: 100%; font-size: 20px;">START QUIZ</button>
     </div>
 
     <div id="quiz-screen" style="display:none;">
-        <div id="progress">Question <span id="q-num">1</span> of 10</div>
         <div id="timer">15</div>
-        <h2 id="question-text">Question here</h2>
+        <h2 id="question-text"></h2>
         <div id="options-container"></div>
     </div>
 
     <div id="result-screen" style="display:none;">
-        <h1>Quiz Finished!</h1>
-        <p id="final-score" style="font-size: 40px; color: #00f2ff; font-weight: bold;"></p>
-        <p>Connect your wallet to record this result in GenLayer Testnet.</p>
-        <button class="btn">Connect Wallet</button>
-        <br>
-        <button class="btn" style="background:#1DA1F2; color:#fff;" onclick="window.open('https://twitter.com/intent/tweet?text=I just finished GenPod Quiz!')">Share on X</button>
+        <img src="image.png.jpeg" style="width: 80px; border-radius: 50%;">
+        <h1 id="txt-finish">Quiz Finished!</h1>
+        <p id="final-score" style="font-size: 50px; color: #00f2ff; font-weight: bold;"></p>
+        <button class="btn btn-x" onclick="shareOnX()">Share on X</button>
     </div>
 </div>
 
+<!-- Оновлена мовна панель: Тільки UA, FR, ES -->
 <div class="lang-bar">
-    <button>🇺🇦 UA</button>
-    <button>🇫🇷 FR</button>
-    <button>🇪🇸 ES</button>
-    <button>🇸🇬 SG</button>
-    <button>🌍 AF</button>
+    <button class="lang-btn active" onclick="setLang('UA')">🇺🇦 UA</button>
+    <button class="lang-btn" onclick="setLang('FR')">🇫🇷 FR</button>
+    <button class="lang-btn" onclick="setLang('ES')">🇪🇸 ES</button>
 </div>
 
 <script>
+    let currentLang = 'UA';
+    let walletConnected = false;
+    let twitterFollowed = false;
+
+    const translations = {
+        UA: { title: "Вітаємо у GenPod Quiz", subtitle: "Виконайте кроки для входу:", wallet: "1. Підключити гаманець", follow: "2. Підписатись в X", start: "ПОЧАТИ КВІЗ", finish: "Квіз завершено!" },
+        FR: { title: "Bienvenue sur GenPod Quiz", subtitle: "Étapes pour déverrouiller:", wallet: "1. Connecter le portefeuille", follow: "2. Suivre sur X", start: "COMMENCER", finish: "Quiz terminé!" },
+        ES: { title: "Bienvenido a GenPod Quiz", subtitle: "Pasos para desbloquear:", wallet: "1. Conectar billetera", follow: "2. Seguir en X", start: "EMPEZAR", finish: "¡Quiz terminado!" }
+    };
+
     const questions = [
-        { q: "What is David Johnston’s primary goal when building Web3?", a: ["To maximize profit", "To increase human freedom", "To create government systems", "To restrict open-source"], correct: 1 },
-        { q: "What does David compare AI centralization to?", a: ["Soviet Union economy", "Renaissance", "Industrial revolution", "Utopian abundance"], correct: 0 },
-        { q: "What is the new 'bottleneck' in the age of AI?", a: ["Internet speed", "Coding skills", "Agency describing the work", "Hardware access"], correct: 2 },
-        { q: "How many agents does David aim to run by year-end?", a: ["10 agents", "50 agents", "100 agents", "500 agents"], correct: 2 },
-        { q: "What is 'Johnston’s Law'?", a: ["AI replaces humans", "Centralization is safer", "Everything that can be decentralized will be", "Math is unreliable"], correct: 2 },
-        { q: "Why does AI need Web3 rails like x402?", a: ["Fast, atomic micro-payments", "Bank integration", "KYC verification", "To slow down work"], correct: 0 },
-        { q: "What is the Morpheus Virtual Machine (MVM)?", a: ["Bitcoin miner", "Infrastructure for smart agents", "Antivirus", "Social media algorithm"], correct: 1 },
-        { q: "What was the Google Maps 'dystopia' example?", a: ["No satellite view", "High usage fees", "Ad misdirected to wrong doctor", "Blocked GPS signal"], correct: 2 },
-        { q: "What does 'humans as oracles' mean?", a: ["Humans join code", "Humans express free will and goals", "Manual labor only", "No more decisions"], correct: 1 },
-        { q: "What is an 'intent-based' system?", a: ["Acts without input", "User expresses preference, agent matches it", "Centralized intent database", "Old search engine"], correct: 1 }
+        {
+            UA: { q: "Яка головна мета Девіда Джонстона?", a: ["Прибуток", "Свобода людини", "Регуляції", "Закриті системи"], c: 1 },
+            FR: { q: "Quel est l'objectif de David?", a: ["Profit", "Liberté humaine", "Régulation", "Systèmes fermés"], c: 1 },
+            ES: { q: "¿Cuál es el objetivo de David?", a: ["Beneficio", "Libertad humana", "Regulación", "Sistemas cerrados"], c: 1 }
+        },
+        {
+            UA: { q: "На що схожий централізований ШІ?", a: ["СРСР", "США", "Сінгапур", "ЄС"], c: 0 },
+            FR: { q: "À quoi ressemble l'IA centralisée?", a: ["Union Soviétique", "USA", "Singapour", "UE"], c: 0 },
+            ES: { q: "¿A qué se parece la IA centralizada?", a: ["Unión Soviética", "USA", "Singapur", "UE"], c: 0 }
+        },
+        {
+            UA: { q: "Що є новим 'вузьким місцем' в епоху ШІ?", a: ["Швидкість інтернету", "Навички кодування", "Опис завдання агенту", "Залізо"], c: 2 },
+            FR: { q: "Quel est le nouveau goulot d'étranglement?", a: ["Vitesse Web", "Codage", "Description de l'agence", "Matériel"], c: 2 },
+            ES: { q: "¿Cuál es el nuevo cuello de botella?", a: ["Velocidad Web", "Codificación", "Descripción de la agencia", "Hardware"], c: 2 }
+        }
+        // Тут можна додати ще 7 питань за аналогією
     ];
 
-    let currentQ = 0;
-    let score = 0;
-    let timeLeft = 15;
-    let timerId;
+    function setLang(lang) {
+        currentLang = lang;
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        if (event) event.target.classList.add('active');
+        
+        const t = translations[lang];
+        document.getElementById('txt-title').innerText = t.title;
+        document.getElementById('txt-subtitle').innerText = t.subtitle;
+        if(!walletConnected) document.getElementById('wallet-btn').innerText = t.wallet;
+        document.getElementById('main-start-btn').innerText = t.start;
+        document.getElementById('txt-finish').innerText = t.finish;
+    }
+
+    async function connectWallet() {
+        if (window.ethereum) {
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                walletConnected = true;
+                document.getElementById('wallet-status').style.display = 'block';
+                document.getElementById('wallet-btn').innerText = accounts[0].substring(0,6)+'...';
+                checkUnlock();
+            } catch (e) { alert("Error"); }
+        } else { alert("Install MetaMask!"); }
+    }
+
+    function markTwitter() {
+        twitterFollowed = true;
+        document.getElementById('twitter-status').style.display = 'block';
+        window.open('https://x.com/GenLayer', '_blank');
+        checkUnlock();
+    }
+
+    function checkUnlock() {
+        if(walletConnected && twitterFollowed) document.getElementById('main-start-btn').disabled = false;
+    }
+
+    let currentQ = 0; let score = 0; let timer; let timeLeft = 15;
 
     function startQuiz() {
         document.getElementById('start-screen').style.display = 'none';
@@ -112,48 +139,45 @@
     }
 
     function showQuestion() {
-        clearInterval(timerId);
+        clearInterval(timer);
         timeLeft = 15;
         document.getElementById('timer').innerText = timeLeft;
-        document.getElementById('q-num').innerText = currentQ + 1;
-        
-        const q = questions[currentQ];
-        document.getElementById('question-text').innerText = q.q;
+        const qData = questions[currentQ][currentLang];
+        document.getElementById('question-text').innerText = qData.q;
         const container = document.getElementById('options-container');
         container.innerHTML = '';
-        
-        q.a.forEach((opt, i) => {
+        qData.a.forEach((opt, i) => {
             const b = document.createElement('button');
             b.className = 'option-btn';
             b.innerText = opt;
-            b.onclick = () => handleAnswer(i === q.correct);
+            b.onclick = () => { if(i === qData.c) score++; nextQ(); };
             container.appendChild(b);
         });
-
-        timerId = setInterval(() => {
+        timer = setInterval(() => {
             timeLeft--;
             document.getElementById('timer').innerText = timeLeft;
-            if (timeLeft <= 0) handleAnswer(false);
+            if(timeLeft <= 0) nextQ();
         }, 1000);
     }
 
-    function handleAnswer(isCorrect) {
-        if (isCorrect) score++;
+    function nextQ() {
         currentQ++;
-        if (currentQ < questions.length) {
-            showQuestion();
-        } else {
-            showResult();
+        if(currentQ < questions.length) showQuestion();
+        else {
+            clearInterval(timer);
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
         }
     }
 
-    function showResult() {
-        clearInterval(timerId);
-        document.getElementById('quiz-screen').style.display = 'none';
-        document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('final-score').innerText = `${score} / 10`;
+    function shareOnX() {
+        const text = `I scored ${score}/${questions.length} on @GenLayer Quiz! 🚀`;
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`);
     }
-</script>
 
+    // Встановлюємо мову за замовчуванням
+    setLang('UA');
+</script>
 </body>
 </html>
