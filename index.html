@@ -1,195 +1,166 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GenPod Quiz | GenLayer Edition</title>
+    <title>GenPod Quiz - David Johnston Interview</title>
     <style>
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
-        .container { max-width: 650px; margin: auto; padding: 20px; flex: 1; }
+        .container { max-width: 600px; margin: auto; padding: 20px; flex: 1; }
         img.banner { width: 100%; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); }
-        .btn { background: #00f2ff; border: none; color: #000; padding: 15px 30px; font-weight: bold; cursor: pointer; border-radius: 30px; margin: 10px; transition: 0.3s; }
-        .btn:disabled { background: #555; cursor: not-allowed; }
-        .btn-x { background: #fff; color: #000; }
-        .option-btn { display: block; width: 100%; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid #333; padding: 15px; margin: 10px 0; border-radius: 10px; cursor: pointer; text-align: left; font-size: 15px; line-height: 1.4; }
+        .btn { background: #00f2ff; border: none; color: #000; padding: 15px 30px; font-weight: bold; cursor: pointer; border-radius: 30px; margin: 10px; transition: 0.3s; width: 90%; font-size: 16px; display: inline-block; }
+        .btn:disabled { background: #444; cursor: not-allowed; color: #888; }
+        .option-btn { display: block; width: 100%; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid #333; padding: 15px; margin: 10px 0; border-radius: 10px; cursor: pointer; text-align: left; font-size: 16px; }
         .option-btn:hover { border-color: #00f2ff; background: rgba(0, 242, 255, 0.1); }
-        #timer { font-size: 32px; color: #ff0055; font-weight: bold; margin-bottom: 10px; }
-        .lang-bar { padding: 20px; background: #111; border-top: 1px solid #222; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        .lang-btn { background: transparent; border: 1px solid #444; color: #aaa; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .timer-container { width: 100%; background: #222; height: 8px; border-radius: 4px; margin: 20px 0; overflow: hidden; }
+        #timer-bar { background: #00f2ff; height: 100%; width: 100%; transition: width 1s linear; }
+        #progress { color: #00f2ff; margin-bottom: 10px; font-weight: bold; font-size: 18px; }
+        .lang-bar { padding: 15px; background: #111; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        .lang-btn { background: transparent; border: 1px solid #444; color: #aaa; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
         .lang-btn.active { border-color: #00f2ff; color: #fff; background: rgba(0, 242, 255, 0.1); }
-        .verification-step { background: #111; padding: 15px; border-radius: 10px; margin: 10px 0; border: 1px solid #222; }
-        .status-ok { color: #00ff88; font-size: 13px; display: none; margin-top: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <img src="image.png.jpeg" alt="GenPod Header" class="banner">
+    <img src="image.png.jpeg" alt="GenPod Banner" class="banner">
     
     <div id="start-screen">
-        <h1 id="txt-title">Welcome to GenPod Quiz</h1>
-        <p id="txt-subtitle">Complete steps to unlock the quiz:</p>
-        
-        <div class="verification-step">
-            <button class="btn" id="wallet-btn" onclick="connectWallet()">1. Connect Wallet</button>
-            <p id="wallet-status" class="status-ok">✔ Wallet Connected</p>
-        </div>
-
-        <div class="verification-step">
-            <button class="btn btn-x" onclick="markTwitter()">2. Follow on X</button>
-            <p id="twitter-status" class="status-ok">✔ Followed</p>
-        </div>
-
-        <button class="btn" id="main-start-btn" disabled onclick="startQuiz()" style="width: 100%; font-size: 20px;">START QUIZ</button>
+        <h1 id="txt-title">David Johnston Quiz</h1>
+        <p id="txt-desc">Експертний квіз за матеріалами інтерв'ю</p>
+        <button class="btn" id="wallet-btn" onclick="connectWallet()">Підключити GenLayer Studio</button>
+        <button class="btn" id="start-quiz-btn" disabled onclick="startQuiz()" style="margin-top:20px; background:#ff0055; color:#fff;">ПОЧАТИ</button>
     </div>
 
     <div id="quiz-screen" style="display:none;">
-        <div id="timer">15</div>
-        <h2 id="question-text"></h2>
+        <div id="progress">Питання 1 / 10</div>
+        <div class="timer-container"><div id="timer-bar"></div></div>
+        <h2 id="question-text" style="font-size: 20px;"></h2>
         <div id="options-container"></div>
     </div>
 
     <div id="result-screen" style="display:none;">
-        <img src="image.png.jpeg" style="width: 80px; border-radius: 50%;">
-        <h1 id="txt-finish">Quiz Finished!</h1>
-        <p id="final-score" style="font-size: 50px; color: #00f2ff; font-weight: bold;"></p>
-        <button class="btn btn-x" onclick="shareOnX()">Share on X</button>
+        <h1 id="txt-finish">Готово!</h1>
+        <p id="final-score" style="font-size: 48px; color: #00f2ff; font-weight: bold;"></p>
+        <p id="tx-status" style="color: #00ff88;">Надсилання результату в GenLayer Studio...</p>
     </div>
 </div>
 
 <div class="lang-bar">
-    <button class="lang-btn active" id="btn-en" onclick="setLang('EN')">🇺🇸 EN</button>
-    <button class="lang-btn" id="btn-fr" onclick="setLang('FR')">🇫🇷 FR</button>
-    <button class="lang-btn" id="btn-es" onclick="setLang('ES')">🇪🇸 ES</button>
-    <button class="lang-btn" id="btn-tr" onclick="setLang('TR')">🇹🇷 TR</button>
-    <button class="lang-btn" id="btn-ua" onclick="setLang('UA')">🇺🇦 UA</button>
+    <button class="lang-btn active" id="l-ua" onclick="setLang('UA')">🇺🇦 UA</button>
+    <button class="lang-btn" id="l-en" onclick="setLang('EN')">🇺🇸 EN</button>
 </div>
 
 <script>
-    let currentLang = 'EN';
-    let walletConnected = false;
-    let twitterFollowed = false;
+    let currentLang = 'UA';
+    let userAddress = "";
+    let currentQ = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 20; // Збільшено час через довжину питань
 
-    const translations = {
-        EN: { title: "Welcome to GenPod Quiz", subtitle: "Steps to unlock:", wallet: "1. Connect Wallet", follow: "2. Follow on X", start: "START QUIZ", finish: "Finished!", walletOk: "✔ Wallet Connected", twitterOk: "✔ Followed" },
-        FR: { title: "Bienvenue au Quiz GenPod", subtitle: "Étapes à débloquer:", wallet: "1. Connecter portefeuille", follow: "2. Suivre sur X", start: "COMMENCER", finish: "Terminé!", walletOk: "✔ Connecté", twitterOk: "✔ Suivi" },
-        ES: { title: "Bienvenido a GenPod Quiz", subtitle: "Pasos para desbloquear:", wallet: "1. Conectar Billetera", follow: "2. Seguir en X", start: "EMPEZAR QUIZ", finish: "¡Terminado!", walletOk: "✔ Conectado", twitterOk: "✔ Seguido" },
-        TR: { title: "GenPod Quiz'e Hoş Geldiniz", subtitle: "Kilidi açmak için:", wallet: "1. Cüzdanı Bağla", follow: "2. X'te Takip Et", start: "BAŞLAT", finish: "Bitti!", walletOk: "✔ Bağlandı", twitterOk: "✔ Takip Edildi" },
-        UA: { title: "Вітаємо у GenPod Quiz", subtitle: "Кроки для входу:", wallet: "1. Підключити гаманець", follow: "2. Підписатись в X", start: "ПОЧАТИ КВІЗ", finish: "Квіз завершено!", walletOk: "✔ Підключено", twitterOk: "✔ Підписано" }
+    const GENLAYER_STUDIO_CONFIG = {
+        chainId: '0xF22F', 
+        chainName: 'GenLayer Studio',
+        rpcUrls: ['https://studio.genlayer.com/api'],
+        nativeCurrency: { name: 'GEN', symbol: 'GEN', decimals: 18 },
+        blockExplorerUrls: [] 
     };
 
     const questions = [
         {
-            UA: { q: "Чому в блокчейні менше суперечок, ніж у традиційному світі?", a: ["Юристи працюють швидше", "Смарт-контракти детерміновані та автоматичні", "Судді зі ШІ вирішують все", "Транзакції занадто дорогі"], c: 1 },
-            EN: { q: "Why are there fewer disputes in blockchain than in the traditional world?", a: ["Lawyers work faster", "Smart contracts are deterministic and automatic", "AI judges solve everything", "Transactions are too expensive"], c: 1 },
-            FR: { q: "Pourquoi y a-t-il moins de litiges dans la blockchain?", a: ["Les avocats sont plus rapides", "Les smart contracts sont déterministes et automatiques", "L'IA résout tout", "Les transactions sont trop chères"], c: 1 },
-            ES: { q: "¿Por qué hay menos disputas en blockchain?", a: ["Los abogados son más rápidos", "Los smart contracts son deterministas y automáticos", "La IA resuelve todo", "Las transacciones son caras"], c: 1 },
-            TR: { q: "Blockchain dünyasında neden geleneksel dünyaya göre daha az anlaşmazlık var?", a: ["Avukatlar daha hızlı çalışıyor", "Akıllı sözleşmeler deterministik ve otomatiktir", "Yapay zeka yargıçları her şeyi çözüyor", "İşlemler çok pahalı"], c: 1 }
+            EN: "Why does David think there are significantly fewer disputes in the blockchain world than in the traditional world?",
+            UA: "Чому Девід вважає, що у світі блокчейну значно менше суперечок, ніж у традиційному світі?",
+            a: ["Because blockchain lawyers work much faster", "Because smart contracts are deterministic and always execute automatically", "Because all disputes are resolved instantly by AI judges", "Because transactions are too expensive to create conflict"],
+            c: 1
         },
         {
-            UA: { q: "Що таке 'трагедія спільного' (tragedy of the commons) в ШІ?", a: ["Відсутність стандартів коду", "Монополізація інтернету великими компаніями", "Ресурси перевантажуються; децентралізація вирішує це через володіння", "Завищені комісії"], c: 2 },
-            EN: { q: "What is the 'tragedy of the commons' in AI?", a: ["Lack of code standards", "Monopolization by big companies", "Resources get overloaded; decentralization solves it via ownership", "High fees"], c: 2 },
-            FR: { q: "Qu'est-ce que la 'tragédie des communs' dans l'IA?", a: ["Manque de standards", "Monopolisation par les grandes entreprises", "Surcharge des ressources; la décentralisation résout cela par la propriété", "Frais élevés"], c: 2 },
-            ES: { q: "¿Qué es la 'tragedia de los comunes' en la IA?", a: ["Falta de estándares", "Monopolio de grandes empresas", "Sobrecarga de recursos; la descentralización lo resuelve mediante la propiedad", "Comisiones altas"], c: 2 },
-            TR: { q: "Yapay zeka bağlamında 'ortak malların trajedisi' nedir?", a: ["Kodlama standartlarının eksikliği", "İnternetin dev şirketlerce tekelleşmesi", "Kaynakların aşırı yüklenmesi; merkeziyetsizlik bunu mülkiyetle çözer", "Yüksek komisyonlar"], c: 2 }
+            EN: "What does David mean by the “tragedy of the commons” in the context of AI?",
+            UA: "Що Девід має на увазі під «трагедією спільного» в контексті ШІ?",
+            a: ["The lack of uniform coding standards", "The problem of a few large companies monopolizing the internet", "Resources are overloaded because they are not owned by anyone; decentralization solves this via personal ownership", "Inflated fees in traditional financial systems"],
+            c: 2
         },
         {
-            UA: { q: "Як влаштовано управління в системі Morpheus?", a: ["Голосування Morpheus DAO", "Morpheus Company", "Комітет з етики ШІ", "Атомарне управління (вибір компонентів індивідуально)"], c: 3 },
-            EN: { q: "How is governance structured in Morpheus?", a: ["Morpheus DAO voting", "Morpheus Company", "AI Ethics Committee", "Atomic governance (individual component choice)"], c: 3 },
-            FR: { q: "Comment la gouvernance est-elle structurée dans Morpheus?", a: ["Vote Morpheus DAO", "Morpheus Company", "Comité d'éthique IA", "Gouvernance atomique (choix individuel)"], c: 3 },
-            ES: { q: "¿Cómo se estructura la gobernanza en Morpheus?", a: ["Votación Morpheus DAO", "Morpheus Company", "Comité de ética", "Gobernanza atómica (elección individual)"], c: 3 },
-            TR: { q: "Morpheus sisteminde yönetişim nasıl yapılandırılmıştır?", a: ["DAO oylaması", "Morpheus Şirketi", "Etik Komitesi", "Atomik yönetişim (bireysel bileşen seçimi)"], c: 3 }
+            EN: "How is governance arranged in the Morpheus system?",
+            UA: "Як влаштовано управління (governance) в системі Morpheus?",
+            a: ["All decisions are made by voting within the Morpheus DAO", "Governance is centralized through the Morpheus Company", "Governance is handled by an AI ethics committee", "There is no company or DAO; there is “atomic governance” where each user chooses components"],
+            c: 3
         },
         {
-            UA: { q: "Які три реєстри забезпечує ERC-8004 для ШІ-агентів?", a: ["Попит, пропозиція, ліквідність", "Ідентифікація, валідація, репутація", "Токени, гаманці, контракти", "Приватність, безпека, швидкість"], c: 1 },
-            EN: { q: "Which three registries does ERC-8004 provide for AI agents?", a: ["Demand, supply, liquidity", "Identification, validation, reputation", "Tokens, wallets, contracts", "Privacy, security, speed"], c: 1 },
-            FR: { q: "Quels sont les trois registres fournis par ERC-8004?", a: ["Offre, demande, liquidité", "Identification, validation, réputation", "Tokens, wallets, contrats", "Privacité, sécurité, vitesse"], c: 1 },
-            ES: { q: "¿Qué tres registros proporciona ERC-8004?", a: ["Oferta, demanda, liquidez", "Identificación, validación, reputación", "Tokens, billeteras, contratos", "Privacidad, seguridad, velocidad"], c: 1 },
-            TR: { q: "ERC-8004, yapay zeka ajanları için hangi üç kaydı sağlar?", a: ["Talep, arz, likidite", "Kimlik, doğrulama, itibar", "Tokenlar, cüzdanlar, sözleşmeler", "Gizlilik, güvenlik, ölçeklenebilirlik"], c: 1 }
+            EN: "What three key registries does the ERC-8004 standard provide for AI agents?",
+            UA: "Які три ключові реєстри передбачає стандарт ERC-8004 для ШІ-агентів?",
+            a: ["Demand, supply, and liquidity", "Identification, validation, and reputation", "Tokens, wallets, and smart contracts", "Privacy, security, and scalability"],
+            c: 1
         },
         {
-            UA: { q: "Що вирішує конфлікти між агентами в ERC-8004?", a: ["Кількість підписників", "Обсяг коду", "Репутація на основі on-chain активності", "Країна власника"], c: 2 },
-            EN: { q: "What resolves conflicts between agents in ERC-8004?", a: ["Number of followers", "Code volume", "Reputation based on on-chain activity", "Owner's country"], c: 2 },
-            FR: { q: "Qu'est-ce qui résout les conflits entre agents (ERC-8004)?", a: ["Nombre d'abonnés", "Volume de code", "Réputation basée sur l'activité on-chain", "Pays du propriétaire"], c: 2 },
-            ES: { q: "¿Qué resuelve los conflictos en ERC-8004?", a: ["Seguidores", "Volumen de código", "Reputación on-chain", "País del propietario"], c: 2 },
-            TR: { q: "ERC-8004'e göre ajanlar arası çatışmaları çözen temel faktör nedir?", a: ["Takipçi sayısı", "Kod hacmi", "Zincir üstü aktiviteye dayalı itibar", "Kayıtlı olduğu ülke"], c: 2 }
+            EN: "What is the decisive factor for resolving agent conflicts according to the ERC-8004 standard?",
+            UA: "Який вирішальний фактор для вирішення конфліктів агентів згідно зі стандартом ERC-8004?",
+            a: ["The number of subscribers of the developer", "The amount of code written for the agent", "Reputation based on real on-chain activity and transactions", "The country of registration of the agent owner"],
+            c: 2
         },
         {
-            UA: { q: "Скільки мов мають підтримувати агенти для масового впровадження?", a: ["Тільки англійську", "Тільки G7", "Щонайменше 5 основних мов", "Усі 7000+ мов"], c: 2 },
-            EN: { q: "How many languages should agents support for mass adoption?", a: ["Only English", "Only G7", "At least 5 major languages", "All 7000+ languages"], c: 2 },
-            FR: { q: "Combien de langues les agents doivent-ils supporter?", a: ["Anglais seulement", "G7 seulement", "Au moins 5 langues majeures", "Toutes les 7000+ langues"], c: 2 },
-            ES: { q: "¿Cuántos idiomas deben admitir los agentes?", a: ["Solo inglés", "Solo G7", "Al menos 5 idiomas principales", "Todos los 7000+"], c: 2 },
-            TR: { q: "Kitlesel benimsenme için ajanlar kaç ana dili desteklemelidir?", a: ["Sadece İngilizce", "Sadece G7 dilleri", "En az 5 ana dünya dili", "7000+ dilin tamamı"], c: 2 }
+            EN: "How many major languages should agents support for mass adoption in the world?",
+            UA: "Скільки основних мов мають підтримувати агенти для масового впровадження у світі?",
+            a: ["Only English", "Only G7 countries languages", "At least 5 major world languages to ensure accessibility", "All 7000+ languages simultaneously"],
+            c: 2
         },
         {
-            UA: { q: "Як вирішити 'проблему холодного старту' для нових агентів?", a: ["Грошова застава", "Рейтинг авансом", "Заборона транзакцій", "Нижчі комісії (1% замість 5%) та цінність"], c: 3 },
-            EN: { q: "How to solve the 'cold start problem' for new agents?", a: ["Cash deposit", "Advance rating", "Transaction ban", "Lower fees (1% vs 5%) and value"], c: 3 },
-            FR: { q: "Comment résoudre le 'problème du démarrage à froid'?", a: ["Dépôt d'argent", "Note d'avance", "Interdiction de transaction", "Frais réduits (1% au lieu de 5%) et valeur"], c: 3 },
-            ES: { q: "¿Cómo resolver el 'problema de arranque en frío'?", a: ["Depósito", "Calificación previa", "Prohibición", "Comisiones bajas (1% vs 5%) y valor"], c: 3 },
-            TR: { q: "Yeni ajanlar için 'soğuk başlangıç' sorunu nasıl çözülür?", a: ["Büyük para teminatı", "Avans reyting", "İnsan onayı bekletme", "Düşük komisyonlar (%5 yerine %1) ve değer"], c: 3 }
+            EN: "How is it proposed to solve the 'cold start problem' for new AI agents?",
+            UA: "Як пропонується вирішити «проблему холодного старту» для нових ШІ-агентів?",
+            a: ["Require developers to pay a large deposit", "Provide them with an initial rating upfront", "Block transactions until human verification", "Incentivize users with lower fees (e.g. 1% instead of 5%) and real value"],
+            c: 3
         },
         {
-            UA: { q: "Який історичний приклад наводить Девід для ШІ-агентів?", a: ["Поштові сервіси", "Біткоїн у 2012 році", "Картки Visa", "Графічний браузер"], c: 1 },
-            EN: { q: "Which historical example does David cite for AI agents?", a: ["Postal services", "Bitcoin in 2012", "Visa cards", "Graphic browser"], c: 1 },
-            FR: { q: "Quel exemple historique David cite-t-il?", a: ["Services postaux", "Bitcoin en 2012", "Cartes Visa", "Navigateur graphique"], c: 1 },
-            ES: { q: "¿Qué ejemplo histórico cita David?", a: ["Correos", "Bitcoin en 2012", "Tarjetas Visa", "Navegador"], c: 1 },
-            TR: { q: "David, yeni ajanların gelişimini hangi tarihi örnekle kıyaslıyor?", a: ["Posta servisleri", "2012'deki Bitcoin", "İlk Visa kartları", "İlk grafik tarayıcı"], c: 1 }
+            EN: "What historical example does David give, comparing it to the stage of development of new AI agents?",
+            UA: "Який історичний приклад наводить Девід, порівнюючи його з етапом розвитку нових ШІ-агентів?",
+            a: ["The development of the first postal services", "Bitcoin in 2012, when the system was small but had potential", "Creation of the first Visa bank cards", "The emergence of the first graphical browser"],
+            c: 1
         },
         {
-            UA: { q: "Яку роль виконує Morpheus відносно Akash чи Bittensor?", a: ["Конкурент", "Аудитор", "Сторона попиту (з’єднує через MVM)", "Заміна інфраструктури"], c: 2 },
-            EN: { q: "What role does Morpheus play relative to Akash or Bittensor?", a: ["Competitor", "Auditor", "Demand side (connects via MVM)", "Infrastructure replacement"], c: 2 },
-            FR: { q: "Quel rôle joue Morpheus par rapport à Akash ou Bittensor?", a: ["Concurrent", "Auditeur", "Côté demande (connecte via MVM)", "Remplacement d'infrastructure"], c: 2 },
-            ES: { q: "¿Qué papel juega Morpheus frente a Akash o Bittensor?", a: ["Competidor", "Auditor", "Lado de la demanda (conecta vía MVM)", "Reemplazo"], c: 2 },
-            TR: { q: "Morpheus'un Akash veya Bittensor gibi projelere göre rolü nedir?", a: ["Rekabet eder", "Ana denetçidir", "Talep tarafıdır (MVM ile bağlar)", "Altyapıyı değiştirir"], c: 2 }
+            EN: "What role does Morpheus play in relation to projects such as Akash or Bittensor?",
+            UA: "Яку роль відіграє Morpheus по відношенню до таких проєктів, як Akash або Bittensor?",
+            a: ["Morpheus competes with them for computing power", "Morpheus is their main auditor", "Morpheus acts as a 'demand side', connecting users via MVM", "Morpheus replaces these projects"],
+            c: 2
         },
         {
-            UA: { q: "Яка мета 'атомарного управління'?", a: ["Більше бюрократії", "Контроль урядів", "Фокус на цінності для індивіда, уникаючи політики та судів", "Світовий уряд для ШІ"], c: 2 },
-            EN: { q: "What is the goal of 'atomic governance'?", a: ["More bureaucracy", "Government control", "Focus on individual value, avoiding politics and courts", "World government for AI"], c: 2 },
-            FR: { q: "Quel est le but de la 'gouvernance atomique'?", a: ["Plus de bureaucratie", "Contrôle gouvernemental", "Focus sur la valeur individuelle, éviter la politique", "Gouvernement mondial IA"], c: 2 },
-            ES: { q: "¿Cuál es el objetivo de la 'gobernanza atómica'?", a: ["Más burocracia", "Control gubernamental", "Valor individual, evitando política y juicios", "Gobierno mundial IA"], c: 2 },
-            TR: { q: "Merkeziyetsiz yapay zekada 'atomik yönetişimin' temel amacı nedir?", a: ["Bürokrasiyi artırmak", "Hükümet kontrolü", "Siyaset ve mahkemelerden kaçınarak bireysel değere odaklanmak", "Yapay zeka için dünya hükümeti"], c: 2 }
+            EN: "What is the main goal of 'atomic governance' in decentralized AI?",
+            UA: "Яка основна мета «атомного управління» у децентралізованому ШІ?",
+            a: ["To increase bureaucratic procedures", "To enable governments to control AI", "To avoid wasting time on politics and courts, focusing on value for the individual", "To create a single world government for AI"],
+            c: 2
         }
     ];
+
+    async function connectWallet() {
+        if (!window.ethereum) return alert("Встановіть гаманець!");
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: GENLAYER_STUDIO_CONFIG.chainId }],
+                });
+            } catch (err) {
+                if (err.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [GENLAYER_STUDIO_CONFIG],
+                    });
+                }
+            }
+            userAddress = accounts[0];
+            document.getElementById('wallet-btn').innerText = "OK: " + userAddress.substring(0,6);
+            document.getElementById('start-quiz-btn').disabled = false;
+        } catch (e) { console.error(e); }
+    }
 
     function setLang(lang) {
         currentLang = lang;
         document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('btn-' + lang.toLowerCase()).classList.add('active');
-        
-        const t = translations[lang];
-        document.getElementById('txt-title').innerText = t.title;
-        document.getElementById('txt-subtitle').innerText = t.subtitle;
-        document.getElementById('wallet-btn').innerText = walletConnected ? t.walletOk : t.wallet;
-        document.getElementById('main-start-btn').innerText = t.start;
-        document.getElementById('txt-finish').innerText = t.finish;
-        document.getElementById('wallet-status').innerText = t.walletOk;
-        document.getElementById('twitter-status').innerText = t.twitterOk;
+        document.getElementById('l-' + lang.toLowerCase()).classList.add('active');
+        const labels = { UA: { t: "David Johnston Quiz", s: "ПОЧАТИ" }, EN: { t: "David Johnston Quiz", s: "START" } };
+        document.getElementById('txt-title').innerText = labels[lang].t;
+        document.getElementById('start-quiz-btn').innerText = labels[lang].s;
     }
-
-    async function connectWallet() {
-        if (window.ethereum) {
-            try {
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                walletConnected = true;
-                document.getElementById('wallet-status').style.display = 'block';
-                document.getElementById('wallet-btn').innerText = accounts[0].substring(0,6)+'...';
-                checkUnlock();
-            } catch (e) { alert("Error connecting wallet"); }
-        } else { alert("Please install MetaMask!"); }
-    }
-
-    function markTwitter() {
-        twitterFollowed = true;
-        document.getElementById('twitter-status').style.display = 'block';
-        window.open('https://x.com/GenLayer', '_blank');
-        checkUnlock();
-    }
-
-    function checkUnlock() {
-        if(walletConnected && twitterFollowed) document.getElementById('main-start-btn').disabled = false;
-    }
-
-    let currentQ = 0; let score = 0; let timer; let timeLeft = 15;
 
     function startQuiz() {
         document.getElementById('start-screen').style.display = 'none';
@@ -199,43 +170,56 @@
 
     function showQuestion() {
         clearInterval(timer);
-        timeLeft = 15;
-        document.getElementById('timer').innerText = timeLeft;
-        const qData = questions[currentQ][currentLang];
-        document.getElementById('question-text').innerText = qData.q;
+        timeLeft = 20;
+        const q = questions[currentQ];
+        document.getElementById('progress').innerText = `Question ${currentQ + 1} / 10`;
+        document.getElementById('question-text').innerText = q[currentLang];
         const container = document.getElementById('options-container');
         container.innerHTML = '';
-        qData.a.forEach((opt, i) => {
+        q.a.forEach((opt, i) => {
             const b = document.createElement('button');
             b.className = 'option-btn';
             b.innerText = opt;
-            b.onclick = () => { if(i === qData.c) score++; nextQ(); };
+            b.onclick = () => handleAnswer(i);
             container.appendChild(b);
         });
+        updateTimer();
         timer = setInterval(() => {
             timeLeft--;
-            document.getElementById('timer').innerText = timeLeft;
-            if(timeLeft <= 0) nextQ();
+            updateTimer();
+            if (timeLeft <= 0) handleAnswer(-1);
         }, 1000);
     }
 
-    function nextQ() {
+    function updateTimer() { document.getElementById('timer-bar').style.width = (timeLeft / 20 * 100) + "%"; }
+
+    function handleAnswer(idx) {
+        if (idx === questions[currentQ].c) score++;
         currentQ++;
-        if(currentQ < questions.length) showQuestion();
-        else {
-            clearInterval(timer);
-            document.getElementById('quiz-screen').style.display = 'none';
-            document.getElementById('result-screen').style.display = 'block';
-            document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
+        if (currentQ < 10) showQuestion();
+        else finish();
+    }
+
+    async function finish() {
+        clearInterval(timer);
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('final-score').innerText = `${score} / 10`;
+        
+        if (userAddress) {
+            try {
+                await window.ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        to: "0x6911e189a3558Bf5c0721AA234C80AaF17cFa383",
+                        from: userAddress,
+                        value: '0x0',
+                        data: '0x' + btoa("Result:" + score).split('').map(c=>c.charCodeAt(0).toString(16).padStart(2, '0')).join('')
+                    }]
+                });
+            } catch (e) { console.error(e); }
         }
     }
-
-    function shareOnX() {
-        const text = `I scored ${score}/${questions.length} on @GenLayer Quiz! 🚀`;
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`);
-    }
-
-    setLang('EN');
 </script>
 </body>
 </html>
