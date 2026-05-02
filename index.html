@@ -3,90 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GenPod Quiz - GenLayer</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <title>GenPod Quiz - David Johnston</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; }
-        .container { max-width: 500px; margin: 30px auto; padding: 20px; border: 1px solid #333; border-radius: 20px; }
-        .btn { display: block; width: 100%; margin: 10px 0; padding: 15px; background: #111; color: #fff; border: 1px solid #444; border-radius: 10px; cursor: pointer; }
-        .btn:hover { border-color: #00f2ff; }
-        .lang-bar { margin-top: 20px; }
+        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
+        .container { max-width: 600px; margin: auto; padding: 20px; flex: 1; }
+        img.banner { width: 100%; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); }
+        .btn { background: #00f2ff; border: none; color: #000; padding: 15px 30px; font-weight: bold; cursor: pointer; border-radius: 30px; margin: 10px; transition: 0.3s; width: 90%; font-size: 16px; display: inline-block; }
+        .btn:disabled { background: #444; cursor: not-allowed; color: #888; }
+        .option-btn { display: block; width: 100%; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid #333; padding: 15px; margin: 10px 0; border-radius: 10px; cursor: pointer; text-align: left; font-size: 16px; }
+        .option-btn:hover { border-color: #00f2ff; background: rgba(0, 242, 255, 0.1); }
+        .timer-container { width: 100%; background: #222; height: 8px; border-radius: 4px; margin: 20px 0; overflow: hidden; }
+        #timer-bar { background: #00f2ff; height: 100%; width: 100%; transition: width 1s linear; }
+        #progress { color: #00f2ff; margin-bottom: 10px; font-weight: bold; font-size: 18px; }
+        .lang-bar { padding: 15px; background: #111; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        .lang-btn { background: transparent; border: 1px solid #444; color: #aaa; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+        .lang-btn.active { border-color: #00f2ff; color: #fff; background: rgba(0, 242, 255, 0.1); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="game">
-        <h2 id="q-text">Підключіть гаманець для початку</h2>
-        <div id="options">
-            <button class="btn" onclick="connect()">🦊 Підключити GenLayer</button>
-        </div>
+    <img src="image.png.jpeg" alt="GenPod Banner" class="banner">
+    
+    <div id="start-screen">
+        <h1 id="txt-title">David Johnston Quiz</h1>
+        <p id="txt-desc">Квіз по інтерв'ю GenPod</p>
+        <button class="btn" id="wallet-btn" onclick="connectWallet()">Підключити GenLayer Studio</button>
+        <button class="btn" id="start-quiz-btn" disabled onclick="startQuiz()" style="margin-top:20px; background:#ff0055; color:#fff;">ПОЧАТИ</button>
+    </div>
+
+    <div id="quiz-screen" style="display:none;">
+        <div id="progress">Питання 1 / 10</div>
+        <div class="timer-container"><div id="timer-bar"></div></div>
+        <h2 id="question-text"></h2>
+        <div id="options-container"></div>
+    </div>
+
+    <div id="result-screen" style="display:none;">
+        <h1 id="txt-finish">Готово!</h1>
+        <p id="final-score" style="font-size: 48px; color: #00f2ff; font-weight: bold;"></p>
+        <p id="tx-status" style="color: #00ff88;">Надсилання в мережу GenLayer Studio...</p>
     </div>
 </div>
 
 <div class="lang-bar">
-    <button onclick="setLang('UA')">UA</button>
-    <button onclick="setLang('EN')">EN</button>
-    <button onclick="setLang('TR')">TR</button>
-    <button onclick="setLang('ES')">ES</button>
-    <button onclick="setLang('FR')">FR</button>
+    <button class="lang-btn active" id="l-ua" onclick="setLang('UA')">🇺🇦 UA</button>
+    <button class="lang-btn" id="l-en" onclick="setLang('EN')">🇺🇸 EN</button>
+    <button class="lang-btn" id="l-tr" onclick="setLang('TR')">🇹🇷 TR</button>
+    <button class="lang-btn" id="l-es" onclick="setLang('ES')">🇪🇸 ES</button>
+    <button class="lang-btn" id="l-fr" onclick="setLang('FR')">🇫🇷 FR</button>
 </div>
 
 <script>
+    let currentLang = 'UA';
+    let userAddress = "";
+    let currentQ = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 15;
+
+    // Параметри з вашого скріншоту
+    const GENLAYER_STUDIO_CONFIG = {
+        chainId: '0xF22F', // Це 61999 у шістнадцятковому форматі
+        chainName: 'GenLayer Studio',
+        rpcUrls: ['https://studio.genlayer.com/api'],
+        nativeCurrency: { name: 'GEN', symbol: 'GEN', decimals: 18 },
+        blockExplorerUrls: [] 
+    };
+
     const questions = [
-        { q: "Яка місія GenPod?", a: ["Ігри", "ШІ-агенти", "NFT", "Майнінг"], c: 1 },
-        { q: "Хто лідер проекту?", a: ["Джонстон", "Маск", "Бутерін", "Сатоші"], c: 0 },
-        { q: "Що таке Intelligent Contracts?", a: ["Код", "ШІ-контракти", "Папір", "Скрипти"], c: 1 },
-        { q: "Проблема Web2 ШІ?", a: ["Цензура", "Швидкість", "Ціна", "Дизайн"], c: 0 },
-        { q: "Що таке Hallucination?", a: ["Вигадка фактів", "Швидкість", "Дизайн", "Помилка"], c: 0 },
-        { q: "Інтерактивність GenPod?", a: ["ШІ-діалог", "Відео", "Звук", "Підписка"], c: 0 },
-        { q: "Консенсус GenLayer?", a: ["PoW", "Optimistic Execution", "PoS", "Delegation"], c: 1 },
-        { q: "Взаємодія з користувачем?", a: ["Гаманець", "Код", "Сервер", "Дозвіл"], c: 0 },
-        { q: "Важливість децентралізації?", a: ["Цензура", "Незалежність", "Реклама", "Дані"], c: 1 },
-        { q: "Майбутнє?", a: ["Web3+AI", "Ніколи", "Зараз", "Пізніше"], c: 0 }
+        { UA: "З чим Девід порівнює централізовані ШІ-моделі?", EN: "What does David compare centralized AI models to?", a: ["Soviet Union", "Roman Empire", "Wall Street", "Public Library"], c: 0 },
+        { UA: "Який новий платіжний стандарт Девід згадує для ШІ-агентів?", EN: "Which new payment standard for AI agents does David mention?", a: ["ERC-20", "x402 (Coinbase)", "Lightning", "SWIFT"], c: 1 },
+        { UA: "Що Девід називає новим вузьким місцем (bottleneck) розвитку ШІ?", EN: "What does David call the new bottleneck for AI growth?", a: ["GPU supply", "Agency describing", "Electricity", "Memory"], c: 1 },
+        { UA: "Скільки автономних агентів Девід планує запустити для себе до кінця року?", EN: "How many autonomous agents does David plan to run for himself by year-end?", a: ["10", "50", "100", "500"], c: 2 },
+        { UA: "Яку назву має інфраструктура (VM), про яку говорить Девід?", EN: "What is the name of the infrastructure (VM) David talks about?", a: ["Ethereum VM", "Morpheus VM", "Solana VM", "Gen VM"], c: 1 },
+        { UA: "Згідно з 'Законом Джонстона', що буде децентралізовано?", EN: "According to 'Johnston’s Law', what will be decentralized?", a: ["Only Money", "Only Apps", "Everything that can be", "Nothing"], c: 2 },
+        { UA: "Яке співвідношення ШІ-інтелекту до людського Девід очікує незабаром?", EN: "What AI-to-human intelligence ratio does David expect soon?", a: ["2x", "5x", "10x", "100x"], c: 1 },
+        { UA: "Що є головною філософською ціллю Девіда в технологіях?", EN: "What is David's main philosophical goal in technology?", a: ["Profit", "Human Freedom", "Efficiency", "Global Control"], c: 1 },
+        { UA: "Чому Девід вважає блокчейн ідеальним для ШІ?", EN: "Why does David think blockchain is perfect for AI?", a: ["It's faster", "Programmable money", "It's cheaper", "Better UI"], c: 1 },
+        { UA: "Що блокчейн дозволяє кожній людині мати в світі ШІ?", EN: "What does blockchain allow every person to have in an AI world?", a: ["Free GPU", "Sovereignty over agents", "Fast Internet", "Unlimited Data"], c: 1 }
     ];
 
-    let score = 0, currentQ = 0, signer;
-
-    async function connect() {
-        if (!window.ethereum) return alert("Гаманець не знайдено");
-        await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{
-            chainId: "0x107d", chainName: "GenLayer Testnet",
-            rpcUrls: ["https://zksync-os-testnet-genlayer.zksync.dev"],
-            nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 }
-        }]});
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        signer = await provider.getSigner();
-        loadQ();
+    async function connectWallet() {
+        if (!window.ethereum) return alert("Встановіть гаманець!");
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: GENLAYER_STUDIO_CONFIG.chainId }],
+                });
+            } catch (err) {
+                if (err.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [GENLAYER_STUDIO_CONFIG],
+                    });
+                }
+            }
+            userAddress = accounts[0];
+            document.getElementById('wallet-btn').innerText = "Мережа: GenLayer Studio";
+            document.getElementById('start-quiz-btn').disabled = false;
+        } catch (e) { alert("Помилка підключення"); }
     }
 
-    function loadQ() {
-        if (currentQ >= questions.length) return finish();
-        let q = questions[currentQ];
-        document.getElementById("q-text").innerText = q.q;
-        let html = "";
-        q.a.forEach((opt, i) => html += `<button class="btn" onclick="check(${i})">${opt}</button>`);
-        document.getElementById("options").innerHTML = html;
+    function setLang(lang) {
+        currentLang = lang;
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('l-' + lang.toLowerCase()).classList.add('active');
+        const labels = { 
+            UA: { t: "David Johnston Quiz", s: "ПОЧАТИ", f: "Готово!" }, 
+            EN: { t: "David Johnston Quiz", s: "START", f: "Finished!" } 
+        };
+        document.getElementById('txt-title').innerText = labels[lang]?.t || labels.EN.t;
+        document.getElementById('start-quiz-btn').innerText = labels[lang]?.s || labels.EN.s;
+        document.getElementById('txt-finish').innerText = labels[lang]?.f || labels.EN.f;
     }
 
-    function check(i) {
-        if (i === questions[currentQ].c) score++;
+    function startQuiz() {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('quiz-screen').style.display = 'block';
+        showQuestion();
+    }
+
+    function showQuestion() {
+        clearInterval(timer);
+        timeLeft = 15;
+        const q = questions[currentQ];
+        document.getElementById('progress').innerText = `Question ${currentQ + 1} / 10`;
+        document.getElementById('question-text').innerText = q[currentLang] || q.EN;
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        q.a.forEach((opt, i) => {
+            const b = document.createElement('button');
+            b.className = 'option-btn';
+            b.innerText = opt;
+            b.onclick = () => handleAnswer(i);
+            container.appendChild(b);
+        });
+        updateTimer();
+        timer = setInterval(() => {
+            timeLeft--;
+            updateTimer();
+            if (timeLeft <= 0) handleAnswer(-1);
+        }, 1000);
+    }
+
+    function updateTimer() { document.getElementById('timer-bar').style.width = (timeLeft / 15 * 100) + "%"; }
+
+    function handleAnswer(idx) {
+        if (idx === questions[currentQ].c) score++;
         currentQ++;
-        loadQ();
+        if (currentQ < 10) showQuestion();
+        else finish();
     }
 
     async function finish() {
-        document.getElementById("q-text").innerText = "Результат: " + score + "/10";
-        document.getElementById("options").innerHTML = `<button class="btn" onclick="sign()">ПІДПИСАТИ В GENLAYER</button>`;
+        clearInterval(timer);
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('final-score').innerText = `${score} / 10`;
+        
+        if (userAddress) {
+            try {
+                await window.ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        to: "0x6911e189a3558Bf5c0721AA234C80AaF17cFa383",
+                        from: userAddress,
+                        value: '0x0',
+                        data: '0x' + btoa("QuizResult:" + score).split('').map(c=>c.charCodeAt(0).toString(16).padStart(2, '0')).join('')
+                    }]
+                });
+                document.getElementById('tx-status').innerText = "Транзакція надіслана в GenLayer Studio!";
+            } catch (e) {
+                document.getElementById('tx-status').innerText = "Помилка транзакції.";
+            }
+        }
     }
-
-    async function sign() {
-        const contract = new ethers.Contract("0x6911e189a3558Bf5c0721AA234C80AaF17cFa383", ["function submitScore(uint256)"], signer);
-        const tx = await contract.submitScore(score);
-        alert("Транзакція надіслана: " + tx.hash);
-    }
-    
-    function setLang(l) { alert("Мову змінено на " + l); }
 </script>
 </body>
 </html>
