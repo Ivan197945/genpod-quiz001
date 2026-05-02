@@ -32,7 +32,7 @@
         
         <div style="background: #111; padding: 20px; border-radius: 15px; border: 1px solid #222; margin-bottom: 20px;">
             <button class="btn" id="wallet-btn" onclick="connectWallet()">Підключити гаманець</button>
-            <p id="wallet-status" class="status-ok">✔ Гаманець підключено</p>
+            <p id="wallet-status" class="status-ok">✔ Мережа GenLayer OK</p>
         </div>
 
         <button class="btn" id="start-quiz-btn" disabled onclick="startQuiz()" style="background: #ff0055; color: #fff; font-size: 20px;">ПОЧАТИ КВІЗ</button>
@@ -48,7 +48,7 @@
     <div id="result-screen" style="display:none;">
         <h1 id="txt-finish">Готово!</h1>
         <p id="final-score" style="font-size: 48px; color: #00f2ff; font-weight: bold;"></p>
-        <p id="tx-info" style="color: #00ff88;">Надсилання транзакції в GenLayer Testnet...</p>
+        <p id="tx-info" style="color: #00ff88;">Підпишіть транзакцію для GenLayer...</p>
     </div>
 </div>
 
@@ -68,6 +68,9 @@
     let timer;
     let timeLeft = 15;
 
+    // Параметри мережі GenLayer
+    const GENLAYER_CHAIN_ID = '0x1c'; // Приклад (замініть на актуальний ID вашої мережі)
+
     const translations = {
         UA: { title: "David Johnston Quiz", desc: "Вікторина за матеріалами інтерв'ю", wallet: "Підключити гаманець", start: "ПОЧАТИ КВІЗ", finish: "Вікторину завершено!", tx: "Надсилання в GenLayer..." },
         EN: { title: "David Johnston Quiz", desc: "Quiz based on the interview", wallet: "Connect Wallet", start: "START QUIZ", finish: "Quiz Finished!", tx: "Sending to GenLayer..." },
@@ -77,102 +80,55 @@
     };
 
     const questions = [
-        {
-            UA: "З якою системою Девід порівнює централізований ШІ?",
-            EN: "What system does David compare centralized AI to?",
-            TR: "Merkezi yapay zekayı hangi sistemle kıyaslıyor?",
-            ES: "¿Con qué sistema compara David la IA centralizada?",
-            FR: "À quel système David compare-t-il l'IA centralisée?",
-            a: ["Soviet Union", "Roman Empire", "Federal Reserve", "Global Network"], c: 0
-        },
-        {
-            UA: "Що є головним критерієм Девіда при виборі технологій?",
-            EN: "What is David's main criterion for choosing tech?",
-            TR: "David'in teknoloji seçimindeki ana kriteri nedir?",
-            ES: "¿Cuál es el criterio principal de David?",
-            FR: "Quel est le critère principal de David?",
-            a: ["Profit", "Human Freedom", "Complexity", "Popularity"], c: 1
-        },
-        {
-            UA: "Що Девід називає новим 'вузьким місцем' (bottleneck) ШІ?",
-            EN: "What does David call the new AI 'bottleneck'?",
-            TR: "Yapay zekadaki yeni 'darboğaz' nedir?",
-            ES: "¿Cuál es el nuevo 'cuello de botella'?",
-            FR: "Quel est le nouveau 'goulot d'étranglement'?",
-            a: ["GPU Power", "Internet Speed", "Agency describing", "Storage"], c: 2
-        },
-        {
-            UA: "Скільки агентів Девід хоче запустити до кінця року?",
-            EN: "How many agents does David want by year end?",
-            TR: "David yıl sonuna kadar kaç ajan istiyor?",
-            ES: "¿Cuántos agentes quiere David para fin de año?",
-            FR: "Combien d'agents David veut-il d'ici la fin de l'année?",
-            a: ["10", "50", "100", "1000"], c: 2
-        },
-        {
-            UA: "За 'Законом Джонстона', що буде децентралізовано?",
-            EN: "By 'Johnston's Law', what will be decentralized?",
-            TR: "Johnston Yasası'na göre ne merkeziyetsizleşecek?",
-            ES: "Según la Ley de Johnston, ¿qué se descentralizará?",
-            FR: "Selon la loi de Johnston, qu'est-ce qui sera décentralisé?",
-            a: ["Everything that can be", "Only Money", "Only Apps", "Nothing"], c: 0
-        },
-        {
-            UA: "Яке співвідношення ШІ-інтелекту до людського він прогнозує?",
-            EN: "What AI-to-human brain power ratio does he predict?",
-            TR: "İnsan beynine kıyasla ne kadar yapay zeka gücü öngörüyor?",
-            ES: "¿Qué proporción de potencia cerebral de IA predice?",
-            FR: "Quel rapport de puissance cérébrale IA/humain prévoit-il?",
-            a: ["2x", "5x", "10x", "Equal"], c: 1
-        },
-        {
-            UA: "Який стандарт платежів для агентів він виділяє (Coinbase)?",
-            EN: "What payment standard for agents does he mention?",
-            TR: "Ajan ödemeleri için hangi standardı belirtiyor?",
-            ES: "¿Qué estándar de pago para agentes menciona?",
-            FR: "Quel standard de paiement pour agents mentionne-t-il?",
-            a: ["ERC-20", "x402", "Lightning", "SWIFT"], c: 1
-        },
-        {
-            UA: "Чому ШІ та крипто — ідеальна пара?",
-            EN: "Why are AI and crypto a perfect pair?",
-            TR: "Neden yapay zeka ve kripto mükemmel bir ikili?",
-            ES: "¿Por qué la IA y el cripto son la pareja perfecta?",
-            FR: "Pourquoi l'IA et la crypto sont-elles le duo parfait?",
-            a: ["Hype", "Programmable money needs", "Mining", "Cheaper"], c: 1
-        },
-        {
-            UA: "Як називається інфраструктура Morpheus VM для агентів?",
-            EN: "What is the infrastructure VM for agents called?",
-            TR: "Ajanlar için altyapı VM'sinin adı nedir?",
-            ES: "¿Cómo se llama la VM de infraestructura?",
-            FR: "Comment s'appelle la VM d'infrastructure?",
-            a: ["Ethereum VM", "Morpheus VM", "Bitcoin VM", "Claude VM"], c: 1
-        },
-        {
-            UA: "Що блокчейн виправляє у світі грошей?",
-            EN: "What does blockchain fix in the world of money?",
-            TR: "Blokzincir para dünyasında neyi düzeltiyor?",
-            ES: "¿Qué soluciona el blockchain en el dinero?",
-            FR: "Que corrige la blockchain dans le monde de l'argent?",
-            a: ["Internet Access", "Monetary freedom", "Education", "Travel"], c: 1
-        }
+        { UA: "З якою системою Девід порівнює централізований ШІ?", EN: "What system does David compare centralized AI to?", TR: "Merkezi yapay zekayı hangi sistemle kıyaslıyor?", ES: "¿Con qué sistema compara David la IA centralizada?", FR: "À quel système David compare-t-il l'IA centralisée?", a: ["Soviet Union", "Roman Empire", "Federal Reserve", "Global Network"], c: 0 },
+        { UA: "Що є головним критерієм Девіда при виборі технологій?", EN: "What is David's main criterion for choosing tech?", TR: "David'in teknoloji seçimindeki ana kriteri nedir?", ES: "¿Cuál es el criterio principal de David?", FR: "Quel est le critère principal de David?", a: ["Profit", "Human Freedom", "Complexity", "Popularity"], c: 1 },
+        { UA: "Що Девід називає новим 'вузьким місцем' (bottleneck) ШІ?", EN: "What does David call the new AI 'bottleneck'?", TR: "Yapay zekadaki yeni 'darboğaz' nedir?", ES: "¿Cuál es el nuevo 'cuello de botella'?", FR: "Quel est le nouveau 'goulot d'étranglement'?", a: ["GPU Power", "Internet Speed", "Agency describing", "Storage"], c: 2 },
+        { UA: "Скільки агентів Девід хоче запустити до кінця року?", EN: "How many agents does David want by year end?", TR: "David yıl sonuna kadar kaç ajan istiyor?", ES: "¿Cuántos agentes quiere David para fin de año?", FR: "Combien d'agents David veut-il d'ici la fin de l'année?", a: ["10", "50", "100", "1000"], c: 2 },
+        { UA: "За 'Законом Джонстона', що буде децентралізовано?", EN: "By 'Johnston's Law', what will be decentralized?", TR: "Johnston Yasası'na göre ne merkeziyetsizleşecek?", ES: "Según la Ley de Johnston, ¿qué se descentralizará?", FR: "Selon la loi de Johnston, qu'est-ce qui sera décentralisé?", a: ["Everything that can be", "Only Money", "Only Apps", "Nothing"], c: 0 },
+        { UA: "Яке співвідношення ШІ-інтелекту до людського він прогнозує?", EN: "What AI-to-human brain power ratio does he predict?", TR: "İnsan beynine kıyasla ne kadar yapay zeka gücü öngörüyor?", ES: "¿Qué proporción de potencia cerebral de IA predice?", FR: "Quel rapport de puissance cérébrale IA/humain prévoit-il?", a: ["2x", "5x", "10x", "Equal"], c: 1 },
+        { UA: "Який стандарт платежів для агентів він виділяє (Coinbase)?", EN: "What payment standard for agents does he mention?", TR: "Ajan ödemeleri için hangi standardı belirtiyor?", ES: "¿Qué estándar de pago para agentes menciona?", FR: "Quel standard de paiement pour agents mentionne-t-il?", a: ["ERC-20", "x402", "Lightning", "SWIFT"], c: 1 },
+        { UA: "Чому ШІ та крипто — ідеальна пара?", EN: "Why are AI and crypto a perfect pair?", TR: "Neden yapay zeka ve kripto mükemmel bir ikili?", ES: "¿Por qué la IA y el cripto son la pareja perfecta?", FR: "Pourquoi l'IA et la crypto sont-elles le duo parfait?", a: ["Hype", "Programmable money needs", "Mining", "Cheaper"], c: 1 },
+        { UA: "Як називається інфраструктура Morpheus VM для агентів?", EN: "What is the infrastructure VM for agents called?", TR: "Ajanlar için altyapı VM'sinin adı nedir?", ES: "¿Cómo se llama la VM de infraestructura?", FR: "Comment s'appelle la VM d'infrastructure?", a: ["Ethereum VM", "Morpheus VM", "Bitcoin VM", "Claude VM"], c: 1 },
+        { UA: "Що блокчейн виправляє у світі грошей?", EN: "What does blockchain fix in the world of money?", TR: "Blokzincir para dünyasında neyi düzeltiyor?", ES: "¿Qué soluciona el blockchain en el dinero?", FR: "Que corrige la blockchain dans le monde de l'argent?", a: ["Internet Access", "Monetary freedom", "Education", "Travel"], c: 1 }
     ];
 
     function setLang(lang) {
         currentLang = lang;
         document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('l-' + lang.toLowerCase()).classList.add('active');
-        
         const t = translations[lang];
         document.getElementById('txt-title').innerText = t.title;
         document.getElementById('txt-desc').innerText = t.desc;
         if(!userAddress) document.getElementById('wallet-btn').innerText = t.wallet;
         document.getElementById('start-quiz-btn').innerText = t.start;
-        document.getElementById('txt-finish').innerText = t.finish;
-        
-        if(document.getElementById('quiz-screen').style.display === 'block') {
-            updateQuestionUI();
+    }
+
+    async function checkNetwork() {
+        try {
+            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+            if (chainId !== GENLAYER_CHAIN_ID) {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: GENLAYER_CHAIN_ID }],
+                });
+            }
+            return true;
+        } catch (err) {
+            // Якщо мережа не додана в MetaMask
+            if (err.code === 4902) {
+                await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                        chainId: GENLAYER_CHAIN_ID,
+                        chainName: 'GenLayer Testnet',
+                        rpcUrls: ['https://rpc.genlayer.com'], // Вкажіть правильний RPC
+                        nativeCurrency: { name: 'GEN', symbol: 'GEN', decimals: 18 },
+                        blockExplorerUrls: ['https://explorer.genlayer.com']
+                    }]
+                });
+                return true;
+            }
+            return false;
         }
     }
 
@@ -180,11 +136,14 @@
         if (window.ethereum) {
             try {
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                userAddress = accounts[0];
-                document.getElementById('wallet-status').style.display = 'block';
-                document.getElementById('wallet-btn').innerText = "OK: " + userAddress.substring(0,6);
-                document.getElementById('start-quiz-btn').disabled = false;
-            } catch (e) { alert("Error"); }
+                const netOk = await checkNetwork();
+                if (netOk) {
+                    userAddress = accounts[0];
+                    document.getElementById('wallet-status').style.display = 'block';
+                    document.getElementById('wallet-btn').innerText = "OK: " + userAddress.substring(0,6);
+                    document.getElementById('start-quiz-btn').disabled = false;
+                }
+            } catch (e) { alert("Помилка мережі або гаманця"); }
         } else { alert("Install MetaMask!"); }
     }
 
@@ -199,7 +158,6 @@
         timeLeft = 15;
         updateTimerBar();
         updateQuestionUI();
-        
         timer = setInterval(() => {
             timeLeft--;
             updateTimerBar();
@@ -222,9 +180,7 @@
         });
     }
 
-    function updateTimerBar() {
-        document.getElementById('timer-bar').style.width = (timeLeft / 15 * 100) + "%";
-    }
+    function updateTimerBar() { document.getElementById('timer-bar').style.width = (timeLeft / 15 * 100) + "%"; }
 
     function handleAnswer(idx) {
         clearInterval(timer);
@@ -245,6 +201,7 @@
                     to: "0x6911e189a3558Bf5c0721AA234C80AaF17cFa383",
                     from: userAddress,
                     value: '0x0',
+                    chainId: GENLAYER_CHAIN_ID, // Фіксуємо мережу в транзакції
                     data: '0x' + btoa("Score:" + score).split('').map(c=>c.charCodeAt(0).toString(16)).join('')
                 };
                 await window.ethereum.request({ method: 'eth_sendTransaction', params: [txParams] });
